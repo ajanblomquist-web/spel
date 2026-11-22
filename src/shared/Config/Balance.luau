@@ -77,7 +77,7 @@ Balance.ThiefRespawnSeconds = 40
 Balance.Studio = {
 	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
-	GiftTimeScale = 0.1, -- playtime gifts unlock 10x sooner while testing
+	GiftTimeScale = 1, -- set to 0.1 to make playtime gifts unlock 10x sooner while testing
 }
 
 function Balance.GiftTimeScale(): number

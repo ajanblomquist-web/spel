@@ -62,7 +62,7 @@ Now press **Play**.
 
 **Testing game passes in Studio:** open **Passes** and press **Test it** on any pass to switch it on or off. This only works in Studio.
 
-**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch and playtime gifts unlock 10x faster in Studio, and can give you starting coins.
+**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch 10x faster in Studio, can make playtime gifts unlock sooner (`GiftTimeScale`, real timing by default), and can give you starting coins.
 
 **Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
 
