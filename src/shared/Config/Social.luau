@@ -2,7 +2,7 @@
 -- The game's Roblox group and the pass hints.
 --
 -- Group: create a group on Roblox, then paste its ID into GroupId. Joining
--- gives a one-time reward (a Luck boost and coins); a "Join our group" row
+-- gives a one-time reward (a 2x Strength boost); a "Join our group" row
 -- shows at the top of the Passes menu until claimed, and one hint suggests it
 -- after the tutorial. With GroupId = 0 all group features are hidden.
 --
@@ -13,9 +13,8 @@
 local Social = {}
 
 Social.GroupId = 0
--- One-time reward for joining: a 2x Luck boost and coins (at least MinCoins,
--- or this many seconds of your income, whichever is more).
-Social.GroupReward = { BoostSeconds = 900, MinCoins = 5000, IncomeSeconds = 600 }
+-- One-time reward for joining: 2x Strength for this long.
+Social.GroupReward = { Boost = "Strength", BoostSeconds = 900 }
 
 Social.HintGapSeconds = 300 -- at least 5 minutes between hints
 Social.HintShowSeconds = 9 -- a hint card closes by itself after this long
@@ -32,7 +31,7 @@ Social.Hints = {
 	LotsOfTraining = { Pass = "AutoTrain", Text = "Auto Train trains at full speed from anywhere." },
 	LotsOfFlings = { Pass = "AutoFling", Text = "Auto Fling flings for you and a drone brings eggs home." },
 	ManyCommons = { Pass = "LuckyShovel", Text = "Want rarer eggs? Lucky Shovel gives +50% luck." },
-	Group = { Pass = "Group", Text = "Join our group for a free 15 min 2x Luck + coins!" },
+	Group = { Pass = "Group", Text = "Join our group for a free 15 min 2x Strength boost!" },
 }
 
 -- How many of something before a hint shows.

@@ -7,7 +7,6 @@ local GroupService = game:GetService("GroupService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Social = require(ReplicatedStorage.Shared.Config.Social)
 local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
@@ -15,7 +14,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local HintService = {}
 
-local DataService, MonetizationService, IncomeService, BoostService
+local DataService, MonetizationService, BoostService
 
 type Session =
 	{ Shown: { [string]: boolean }, LastHint: number, Reps: number, Flings: number, Commons: number }
@@ -56,13 +55,12 @@ local function checkGroup(player: Player)
 	data.GroupRewardClaimed = true
 	player:SetAttribute("GroupRewardClaimed", true)
 	local reward = Social.GroupReward
-	local coins = math.max(reward.MinCoins, math.floor(IncomeService.Total(player) * reward.IncomeSeconds))
-	DataService.AddCoins(player, coins)
-	BoostService.Add(player, "Luck", reward.BoostSeconds)
+	BoostService.Add(player, reward.Boost, reward.BoostSeconds)
 	DataService.SaveNow(player)
+	local minutes = math.floor(reward.BoostSeconds / 60)
 	Notify.Player(
 		player,
-		"Thanks for joining the group! +" .. FormatNumber(coins) .. " coins and 2x Luck!",
+		"Thanks for joining the group! 2x " .. reward.Boost .. " for " .. minutes .. " min!",
 		"epic"
 	)
 end
@@ -99,7 +97,6 @@ end
 function HintService.Init(Services)
 	DataService = Services.DataService
 	MonetizationService = Services.MonetizationService
-	IncomeService = Services.IncomeService
 	BoostService = Services.BoostService
 
 	DataService.OnLoaded(function(player)

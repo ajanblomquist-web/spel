@@ -121,7 +121,7 @@ Now press **Play**.
 - **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
 - **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
 - **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
-- **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Luck and coins; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
+- **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Strength boost; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
 - **6 pedestals** for everyone (12 with Extra Pedestals).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 

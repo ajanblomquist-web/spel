@@ -112,7 +112,7 @@ local function buildGroupRow()
 		return
 	end
 	local list = UI.PassesList()
-	local frame, button = UI.Row(list, -1, "Join our group", "Free! 15 min of 2x Luck + a pile of coins.")
+	local frame, button = UI.Row(list, -1, "Join our group", "Free! 15 minutes of 2x Strength.")
 	frame.BackgroundColor3 = Color3.fromRGB(40, 110, 70)
 	button.Text = "Join"
 	button.BackgroundColor3 = UI.Colors.Green
