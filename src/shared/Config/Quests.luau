@@ -17,6 +17,8 @@
 --   ShovelTier  own at least this shovel tier
 --   Steal       eggs stolen (the practice thief counts)
 --   LockNest    times you locked your nest
+--   IndexCount  boxes ticked in the Dino Index (total, so old ones count)
+--   IndexPage   complete this page of the Dino Index (Target = rarity Id)
 --
 -- Reward: { Coins = n } or { Boost = "Luck" | "Coins" | "Strength", Seconds = n }
 -- Guide: "Rock" | "Pad" | "DigSpot" | "Home" | "Shop" | "Thief"
@@ -123,6 +125,13 @@ local Quests: { Quest } = {
 		Reward = { Boost = "Luck", Seconds = 300 },
 	},
 	{
+		Text = "Fill 6 boxes in your Dino Index",
+		Type = "IndexCount",
+		Target = 6,
+		Guide = "Pad",
+		Reward = { Coins = 1500 },
+	},
+	{
 		Text = "Buy the Iron Shovel",
 		Type = "ShovelTier",
 		Target = 3,
@@ -165,6 +174,20 @@ local Quests: { Quest } = {
 		Target = 4,
 		Guide = "Shop",
 		Reward = { Coins = 40000 },
+	},
+	{
+		Text = "Complete the Uncommon page of your Index",
+		Type = "IndexPage",
+		Target = "Uncommon",
+		Guide = "Pad",
+		Reward = { Coins = 20000 },
+	},
+	{
+		Text = "Fill 25 boxes in your Dino Index",
+		Type = "IndexCount",
+		Target = 25,
+		Guide = "Pad",
+		Reward = { Boost = "Luck", Seconds = 600 },
 	},
 }
 

@@ -99,7 +99,7 @@ Now press **Play**.
 - **Starter Pack** offer shown once, right after the first hatch (a developer product: 2x Coins for 30 min, a Rare egg, 1,000 coins; nothing random)
 
 **First 30 minutes: burst, slow climb, breakthrough**
-- **Quest chain** of 21 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
+- **Quest chain** of 24 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
 - **Egg Thief** NPC walking around the hub with an egg anyone can steal: teaches stealing and works in solo servers (counts for quests, not the Steals leaderboard)
 - **Field speed**: you walk faster the further out into the fling field you are (up to 2.25x at 600 studs), so fetching far eggs stays quick
 - **Playtime gifts** at 3, 8, 15, 25, 40 and 60 minutes (coins, 2x boosts, a Rare and an Epic egg)
@@ -107,6 +107,15 @@ Now press **Play**.
 - **Timed boosts** (2x Luck, Coins, Strength) with timers on the left
 - **Progression curve** retuned (checked with `tools/curve_sim.py`): Fern Valley ~3 min, Tar Pits ~10-15 min, then a slower climb to the **Gold Rock breakthrough** around minute 25-30 (6x Strength per rep, full-screen BREAKTHROUGH celebration) that sends you to the new zone:
 - **Amber Cliffs** (zone 4, 550-850m, x4 luck) with 4 dinos you can only get there
+
+## What's in milestone 3 so far (first 7 days: collection)
+
+- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 8 boxes per row: Dino, Gold, Lava, Ice, Crystal, Rainbow, Huge (Colossal) and Baby. 19 dinos x 8 = 152 boxes. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
+- **Page rewards**: finding every dino of a rarity pays one-time coins (500 for Common up to 20M for Secret) and gives +10% Baby odds for good.
+- **Baby dinos**: every hatch has a 1 in 500 chance to be a Baby: 3x income, small body with a big head and a pink outline, its own reveal ("IT'S A BABY!") and a server-wide shout. Never sold for Robux.
+- **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
+- Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
+- To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
 
 ## Game passes
 
@@ -155,6 +164,7 @@ src/
       Products.luau       developer products (Starter Pack)
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
+      Index.luau          Dino Index variants, page rewards, Baby odds
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -172,6 +182,7 @@ src/
       FlingService        meter check, distance, zone, luck
       ShopService         buying upgrades, breakthrough celebration
       QuestService        tutorial and quest chain
+      IndexService        Dino Index, page rewards, Baby roll
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
@@ -187,6 +198,7 @@ src/
       FlingController     FLING button, meter, flying shovel, distance counter, Auto Fling
       RevealController    hatch reveal, BREAKTHROUGH, banners, Starter Pack offer
       QuestController     quest card, gift button, boost timers
+      IndexController     Dino Index button and panel
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

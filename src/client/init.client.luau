@@ -6,6 +6,7 @@ local ORDER = {
 	"WorldController",
 	"RevealController",
 	"QuestController",
+	"IndexController",
 	"TrainingController",
 	"FlingController",
 }

@@ -19,6 +19,7 @@ local ORDER = {
 	"FlingService",
 	"ShopService",
 	"QuestService",
+	"IndexService",
 	"GiftService",
 	"StarterPackService",
 	"NpcService",

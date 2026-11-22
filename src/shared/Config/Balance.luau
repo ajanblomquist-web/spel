@@ -85,6 +85,7 @@ Balance.Studio = {
 	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
 	GiftTimeScale = 1, -- set to 0.1 to make playtime gifts unlock 10x sooner while testing
+	BabyChance = 0, -- set to e.g. 0.25 to hatch lots of Baby dinos while testing (0 = normal odds)
 }
 
 function Balance.GiftTimeScale(): number

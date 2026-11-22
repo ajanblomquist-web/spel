@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
@@ -22,7 +23,8 @@ function IncomeService.BaseIncome(record): number
 	if not dino then
 		return 0
 	end
-	return dino.Income * (size and size.Multiplier or 1) * (mutation and mutation.Multiplier or 1)
+	local baby = if record.Baby then Index.BabyIncomeMultiplier else 1
+	return dino.Income * (size and size.Multiplier or 1) * (mutation and mutation.Multiplier or 1) * baby
 end
 
 -- Coin multiplier from passes.

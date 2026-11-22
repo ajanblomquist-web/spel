@@ -459,9 +459,14 @@ end
 
 -- Panels -------------------------------------------------------------------------
 
+local extraPanels: { Frame } = {} -- panels made by other controllers (BuildPanel)
+
 local function closeAllPanels()
 	shopPanel.Visible = false
 	passesPanel.Visible = false
+	for _, panel in extraPanels do
+		panel.Visible = false
+	end
 end
 
 local function buildPanel(name: string, title: string): (Frame, ScrollingFrame)
@@ -841,6 +846,20 @@ UIController.Corner = corner
 UIController.Stroke = stroke
 UIController.Colors = COLORS
 UIController.Font = FONT
+
+-- A standard panel (title, X button, scrolling list) for other controllers.
+function UIController.BuildPanel(name: string, title: string): (Frame, ScrollingFrame)
+	local panel, list = buildPanel(name, title)
+	table.insert(extraPanels, panel)
+	return panel, list
+end
+
+-- Opens one panel and closes the others (or closes it if it was open).
+function UIController.TogglePanel(panel: Frame)
+	local open = not panel.Visible
+	closeAllPanels()
+	panel.Visible = open
+end
 
 function UIController.Gui(): ScreenGui
 	return gui

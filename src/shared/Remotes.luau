@@ -16,6 +16,7 @@
 --   Celebrate      server -> client   (kind, data) big moments: "NewZone", "Breakthrough", "Quest"
 --   ClaimGift      client -> server   claim a playtime gift (index)
 --   StudioBuyProduct client -> server Studio only: grant a developer product for testing
+--   IndexSync      server -> client   (index, pagesDone) the player's whole Dino Index
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -34,6 +35,7 @@ local NAMES = {
 	"Celebrate",
 	"ClaimGift",
 	"StudioBuyProduct",
+	"IndexSync",
 }
 
 local FOLDER_NAME = "Remotes"

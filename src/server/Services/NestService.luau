@@ -25,7 +25,7 @@ local Events = require(script.Parent.Parent.Events)
 
 local NestService = {}
 
-local DataService, MapService, MonetizationService, IncomeService, CarryService
+local DataService, MapService, MonetizationService, IncomeService, CarryService, IndexService
 
 -- Nest locks, by os.clock() time.
 local lockedUntil: { [Player]: number } = {}
@@ -314,13 +314,24 @@ local function hatch(player: Player, data, egg)
 		Size = egg.Size,
 		Mutation = egg.Mutation,
 		Zone = egg.Zone,
+		Baby = if IndexService.RollBaby(player) then true else nil,
 	}
 	table.insert(data.Dinos, record)
 	data.Stats.DinosHatched += 1
 
 	local name = Visuals.DinoDisplayName(record)
 	local rarity = Eggs.RarityById[record.Rarity]
-	if rarity.Order >= ANNOUNCE_FROM then
+	if record.Baby then
+		Notify.All(
+			player.DisplayName
+				.. " hatched a BABY "
+				.. name
+				.. "! ("
+				.. IndexService.BabyOddsText(player)
+				.. ")",
+			"epic"
+		)
+	elseif rarity.Order >= ANNOUNCE_FROM then
 		Notify.All(
 			player.DisplayName .. " hatched a " .. string.upper(record.Rarity) .. " " .. name .. "!",
 			"epic"
@@ -377,6 +388,7 @@ function NestService.Init(Services)
 	MonetizationService = Services.MonetizationService
 	IncomeService = Services.IncomeService
 	CarryService = Services.CarryService
+	IndexService = Services.IndexService
 
 	DataService.OnLoaded(function(player)
 		NestService.RenderPedestals(player)

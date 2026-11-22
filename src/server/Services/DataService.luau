@@ -41,7 +41,7 @@ local function defaultData()
 		RockTier = 1,
 		ShovelTier = 1,
 		Steals = 0, -- eggs stolen from other players (shown on the leaderboard)
-		Dinos = {}, -- { { Id, DinoId, Rarity, Size, Mutation } }, one per pedestal
+		Dinos = {}, -- { { Id, DinoId, Rarity, Size, Mutation, Zone, Baby } }, one per pedestal
 		Incubating = {}, -- { { Egg = { Id, Rarity, Size, Mutation }, ReadyAt = unix time } }
 		LastOnline = 0,
 		Quest = { Index = 1, Progress = 0 }, -- position in Config/Quests
@@ -51,6 +51,8 @@ local function defaultData()
 		Purchases = {}, -- { [purchaseId] = true }, so a developer product is never granted twice
 		StarterPackBought = false,
 		StarterOfferShown = false,
+		Index = {}, -- Dino Index: { [dinoId] = { [variantId] = true } }
+		IndexPages = {}, -- { [rarityId] = true }, Index pages whose reward was paid
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,
@@ -145,6 +147,17 @@ local function loadPlayer(player: Player)
 	if isMilestone1Save and data.Stats.EggsDug > 0 then
 		data.FirstEggDone = true
 		data.Quest.Index = 6
+	end
+	-- The "Tiny" size was renamed to "Small".
+	for _, record in data.Dinos do
+		if record.Size == "Tiny" then
+			record.Size = "Small"
+		end
+	end
+	for _, entry in data.Incubating do
+		if entry.Egg.Size == "Tiny" then
+			entry.Egg.Size = "Small"
+		end
 	end
 
 	if player.Parent == nil then
