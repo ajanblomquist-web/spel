@@ -23,12 +23,12 @@ Balance.StrengthScale = 3 -- distance = (Base + StrengthScale * sqrt(Strength)) 
 --   Perfect (green, thin):  |offset| <= PerfectWindow  -> PerfectMultiplier, builds a streak
 --   Great (yellow):         |offset| <= GreatWindow    -> 1.0
 --   Miss (red):             falls from MissMultiplier at the yellow edge to WorstTimingMultiplier at the end
-Balance.MeterCycleSeconds = 0.75 -- time for the needle to go from one side to the other
-Balance.PerfectWindow = 0.04 -- about 60 ms at this speed
-Balance.GreatWindow = 0.1
+Balance.MeterCycleSeconds = 0.9 -- time for the needle to go from one side to the other
+Balance.PerfectWindow = 0.05 -- about 90 ms at this speed
+Balance.GreatWindow = 0.13
 Balance.PerfectMultiplier = 1.3
-Balance.MissMultiplier = 0.8
-Balance.WorstTimingMultiplier = 0.35 -- stopping at the very edge of the meter
+Balance.MissMultiplier = 0.85
+Balance.WorstTimingMultiplier = 0.45 -- stopping at the very edge of the meter
 -- Perfect streak: each Perfect in a row adds this much (on top of PerfectMultiplier), up to the cap.
 Balance.PerfectStreakBonus = 0.05
 Balance.PerfectStreakMax = 5 -- so the 6th Perfect in a row and beyond = 1.3 * 1.25
