@@ -19,12 +19,21 @@ Balance.FlingRange = 14 -- studs from the launch pad
 Balance.FlingCooldown = 1.5
 Balance.BaseDistance = 30 -- studs a brand-new player flings with a perfect-ish hit
 Balance.StrengthScale = 6 -- distance = (Base + StrengthScale * sqrt(Strength)) * shovel power * timing
-Balance.MeterCycleSeconds = 0.9 -- time for the needle to go from one side to the other
-Balance.PerfectWindow = 0.08 -- how far from the centre (0.5) still counts as Perfect
-Balance.PerfectMultiplier = 1.25
-Balance.WorstTimingMultiplier = 0.6 -- stopping at the very edge of the meter
-Balance.MeterTolerance = 0.25 -- how far the client's meter value may differ from the server's estimate
-Balance.AutoFlingTiming = 0.42 -- Auto Fling pass always hits this meter value (good, not perfect)
+-- Timing meter. The needle sweeps 0 -> 1 -> 0; 0.5 is the centre.
+--   Perfect (green, thin):  |offset| <= PerfectWindow  -> PerfectMultiplier, builds a streak
+--   Great (yellow):         |offset| <= GreatWindow    -> 1.0
+--   Miss (red):             falls from MissMultiplier at the yellow edge to WorstTimingMultiplier at the end
+Balance.MeterCycleSeconds = 0.75 -- time for the needle to go from one side to the other
+Balance.PerfectWindow = 0.04 -- about 60 ms at this speed
+Balance.GreatWindow = 0.1
+Balance.PerfectMultiplier = 1.3
+Balance.MissMultiplier = 0.8
+Balance.WorstTimingMultiplier = 0.35 -- stopping at the very edge of the meter
+-- Perfect streak: each Perfect in a row adds this much (on top of PerfectMultiplier), up to the cap.
+Balance.PerfectStreakBonus = 0.05
+Balance.PerfectStreakMax = 5 -- so the 6th Perfect in a row and beyond = 1.3 * 1.25
+Balance.MeterTolerance = 0.12 -- how far the client's meter value may differ from the server's estimate
+Balance.AutoFlingTiming = 0.43 -- Auto Fling pass always hits this meter value (Great, never Perfect)
 Balance.FlightSeconds = 2.2 -- how long the shovel is in the air
 Balance.DigSpotLifetime = 90 -- seconds before an un-dug spot disappears
 

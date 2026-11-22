@@ -365,12 +365,11 @@ local function buildMeter()
 		Parent = gui,
 	}, { corner(12), stroke(3) })
 
-	local good = 0.2 -- yellow band either side of perfect
 	make("Frame", {
-		Name = "Good",
+		Name = "Great",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.fromScale(0.5, 0),
-		Size = UDim2.fromScale((Balance.PerfectWindow + good) * 2, 1),
+		Size = UDim2.fromScale(Balance.GreatWindow * 2, 1),
 		BackgroundColor3 = Color3.fromRGB(250, 210, 60),
 		BorderSizePixel = 0,
 		Parent = meterFrame,
@@ -388,7 +387,7 @@ local function buildMeter()
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 0, -4),
 		Size = UDim2.fromOffset(300, 30),
-		Text = "Tap STOP in the green!",
+		Text = "Hit the thin green line!",
 		Parent = meterFrame,
 	})
 	meterNeedle = make("Frame", {

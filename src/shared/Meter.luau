@@ -15,16 +15,19 @@ function Meter.ValueAt(elapsed: number): number
 	return phase
 end
 
--- Distance multiplier for a meter value, and whether it was a Perfect hit.
-function Meter.TimingMultiplier(value: number): (number, boolean)
+-- Distance multiplier for a meter value, and its grade: "Perfect" | "Great" | "Miss".
+-- (Perfect streak bonus is added by the server on top of this.)
+function Meter.TimingMultiplier(value: number): (number, string)
 	local offCentre = math.abs(value - 0.5)
 	if offCentre <= Balance.PerfectWindow then
-		return Balance.PerfectMultiplier, true
+		return Balance.PerfectMultiplier, "Perfect"
+	elseif offCentre <= Balance.GreatWindow then
+		return 1, "Great"
 	end
-	-- 1.0 just outside the Perfect window, falling to WorstTimingMultiplier at the edge.
-	local t = (offCentre - Balance.PerfectWindow) / (0.5 - Balance.PerfectWindow)
-	local mult = 1 - t * (1 - Balance.WorstTimingMultiplier)
-	return mult, false
+	-- MissMultiplier just outside yellow, falling to WorstTimingMultiplier at the edge.
+	local t = (offCentre - Balance.GreatWindow) / (0.5 - Balance.GreatWindow)
+	local mult = Balance.MissMultiplier - t * (Balance.MissMultiplier - Balance.WorstTimingMultiplier)
+	return mult, "Miss"
 end
 
 return Meter

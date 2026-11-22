@@ -51,7 +51,7 @@ Now press **Play**.
 | Step | What to do |
 |---|---|
 | Train | Walk to the grey **TRAIN** rock and tap the big **TRAIN** button. Each tap adds Strength. |
-| Fling | Stand on the orange **FLING** pad, tap **FLING**, then tap **STOP!** when the white needle is in the green. |
+| Fling | Stand on the orange **FLING** pad, tap **FLING**, then tap **STOP!** when the white needle is on the thin green line (Perfect, and Perfects in a row stack a bonus). Yellow is Great, red is a weak throw. |
 | Dig | Follow the yellow line to your dig spot and hold **Dig** (E on PC). |
 | Carry | Your egg sits on your head. You're slower now. Follow the green line home. |
 | Hatch | Walk into your plot: the egg drops into an incubator and counts down. |
@@ -69,7 +69,7 @@ Now press **Play**.
 ## What's in milestone 1
 
 - Strength training (6 rock tiers in the shop)
-- Fling with timing meter, Perfect hits, 3 zones (Sandy Pit, Fern Valley, Tar Pits); farther zones have more luck
+- Fling with timing meter: thin Perfect zone with a Perfect-streak bonus, Great zone, harsh misses; 3 zones (Sandy Pit, Fern Valley, Tar Pits); farther zones have more luck
 - Egg rolls on the server: 7 rarities, 5 sizes, 6 mutations; luck pushes toward rarer eggs
 - Carry eggs home, slower while carrying
 - **PvP stealing**

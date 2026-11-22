@@ -136,14 +136,21 @@ local function onFlingResult(result)
 	end)
 
 	if isMine then
-		local prefix = if result.Perfect then "PERFECT! " else ""
+		local prefix = ""
+		if result.Perfect then
+			prefix = if result.Streak > 1 then "PERFECT x" .. result.Streak .. "! " else "PERFECT! "
+		elseif result.Grade == "Great" then
+			prefix = "Great! "
+		else
+			prefix = "Missed... "
+		end
 		UIController.Toast(
 			prefix
 				.. result.Distance
 				.. "m into "
 				.. result.ZoneName
 				.. string.format(" (x%.1f luck)", result.Luck),
-			if result.Perfect then "epic" else "good"
+			if result.Perfect then "epic" elseif result.Grade == "Great" then "good" else "bad"
 		)
 	end
 end

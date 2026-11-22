@@ -21,6 +21,7 @@ local DataService, MapService, MonetizationService, CarryService
 
 local sessions: { [Player]: number } = {} -- player -> os.clock() when the meter started
 local lastFling: { [Player]: number } = {}
+local perfectStreak: { [Player]: number } = {}
 local rng = Random.new()
 
 local function nearPad(player: Player): boolean
@@ -59,7 +60,14 @@ local function resolve(player: Player, meterValue: number)
 	lastFling[player] = os.clock()
 
 	local shovel = Shop.Shovels[data.ShovelTier] or Shop.Shovels[1]
-	local timing, perfect = Meter.TimingMultiplier(meterValue)
+	local timing, grade = Meter.TimingMultiplier(meterValue)
+	local perfect = grade == "Perfect"
+	-- Perfects in a row stack a bonus; anything else resets the streak.
+	local streak = if perfect then (perfectStreak[player] or 0) + 1 else 0
+	perfectStreak[player] = streak
+	if perfect then
+		timing *= 1 + math.min(streak - 1, Balance.PerfectStreakMax) * Balance.PerfectStreakBonus
+	end
 	local distance = FlingService.Distance(data.Strength, shovel.Power, timing)
 	local zone = Zones.ForDistance(distance)
 
@@ -88,6 +96,8 @@ local function resolve(player: Player, meterValue: number)
 		ZoneName = zone.Name,
 		Luck = luck,
 		Perfect = perfect,
+		Grade = grade,
+		Streak = streak,
 		ShovelTier = data.ShovelTier,
 	})
 
@@ -145,6 +155,7 @@ function FlingService.Start()
 	Players.PlayerRemoving:Connect(function(player)
 		sessions[player] = nil
 		lastFling[player] = nil
+		perfectStreak[player] = nil
 	end)
 end
 
