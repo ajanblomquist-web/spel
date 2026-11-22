@@ -27,7 +27,7 @@ RARITIES = [(60, 0, 30, 1.1), (25, 0.5, 60, 3.3), (10, 1, 120, 8.5), (4, 1.25, 3
             (0.9, 1.5, 600, 95), (0.09, 1.75, 1200, 360), (0.01, 2, 1800, 1500)]
 # Approximate quest/gift coin rewards: (minute, coins)
 # Rebirth (Config/Rebirth): price grows x3, bonuses per rebirth
-REBIRTH_PRICE, REBIRTH_GROWTH = 1000000, 3
+REBIRTH_PRICE, REBIRTH_GROWTH = 500000, 3
 REBIRTH_STR, REBIRTH_COINS, REBIRTH_LUCK = 0.5, 0.25, 0.1
 BONUSES = [(2, 175), (4, 250), (6, 550), (10, 1000), (14, 600), (15, 1000), (18, 2500), (22, 5000)]
 
