@@ -36,8 +36,8 @@ You need: **Roblox Studio**, **VS Code**, and **Rojo** (it copies the code from 
    rojo serve
    ```
    In Studio open the **Rojo** plugin (Plugins tab) and press **Connect**. The scripts appear under ServerScriptService > Server, StarterPlayerScripts > Client and ReplicatedStorage > Shared.
-6. **Turn on saving in Studio:** *Home > Game Settings > Security > Enable Studio Access to API Services*. (You must publish the place first: *File > Publish to Roblox*.) Without it the game still runs, it just won't save, and shows a red message saying so.
-7. **Set Max Players to 8** in *Game Settings > Places* (there are 8 base plots).
+6. **Turn on saving in Studio:** *File > Game Settings* (older Studio: *Home > Game Settings*) *> Security > Enable Studio Access to API Services*. (You must publish the place first: *File > Publish to Roblox*.) Without it the game still runs, it just won't save, and shows a red message saying so.
+7. **Set Max Players to 8** in Creator Hub (your experience > Places > the place > Configure > Server Size) (there are 8 base plots).
 8. **Save the place** (`.rbxl`) anywhere outside this folder. Next time, just open it, run `rojo serve` and press Connect.
 
 Now press **Play**.
