@@ -21,6 +21,7 @@ local EggRoll = require(script.Parent.Parent.EggRoll)
 local Notify = require(script.Parent.Parent.Notify)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Visuals = require(script.Parent.Parent.Visuals)
+local Events = require(script.Parent.Parent.Events)
 
 local NestService = {}
 
@@ -146,6 +147,7 @@ stealFromNest = function(owner: Player, thief: Player, eggId: string)
 			end
 			NestService.RenderIncubators(owner)
 			DataService.Increment(thief, "Steals", 1)
+			Events.Fire("Steal", thief, entry.Egg, false)
 			Notify.Player(
 				owner,
 				thief.DisplayName .. " stole a " .. entry.Egg.Rarity .. " egg from your nest!",
@@ -201,6 +203,7 @@ local function lockNest(player: Player)
 	setBarrier(player, true)
 	NestService.RenderIncubators(player)
 	Notify.Player(player, "Nest locked for " .. duration .. " seconds!", "good")
+	Events.Fire("LockNest", player)
 
 	task.delay(duration, function()
 		if lockedUntil[player] == untilTime and player.Parent == Players then
@@ -295,6 +298,9 @@ function NestService.TryAddEgg(player: Player, egg): boolean
 	if MonetizationService.Has(player, "FastIncubator") then
 		duration /= Passes.Effects.IncubationSpeed
 	end
+	if egg.Fast then
+		duration = math.min(duration, Balance.FirstEggHatchSeconds)
+	end
 	table.insert(data.Incubating, { Egg = egg, ReadyAt = os.time() + math.max(1, math.ceil(duration)) })
 	NestService.RenderIncubators(player)
 	return true
@@ -303,10 +309,11 @@ end
 local function hatch(player: Player, data, egg)
 	local record = {
 		Id = egg.Id,
-		DinoId = EggRoll.PickDino(egg.Rarity),
+		DinoId = EggRoll.PickDino(egg.Rarity, egg.Zone),
 		Rarity = egg.Rarity,
 		Size = egg.Size,
 		Mutation = egg.Mutation,
+		Zone = egg.Zone,
 	}
 	table.insert(data.Dinos, record)
 	data.Stats.DinosHatched += 1
@@ -318,9 +325,11 @@ local function hatch(player: Player, data, egg)
 			player.DisplayName .. " hatched a " .. string.upper(record.Rarity) .. " " .. name .. "!",
 			"epic"
 		)
-	else
-		Notify.Player(player, "Hatched: " .. name .. " (" .. record.Rarity .. ")", "good")
 	end
+	-- Full-screen reveal on the owner's screen.
+	Remotes.Get("Hatched")
+		:FireClient(player, record, IncomeService.DinoIncome(player, record), egg.Fast == true)
+	Events.Fire("Hatch", player, record)
 end
 
 -- Hatches every egg whose timer is done, if there's a free pedestal.

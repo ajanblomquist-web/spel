@@ -1,7 +1,14 @@
 -- Client entry point. Starts each controller in order.
 
 local Controllers = {}
-local ORDER = { "UIController", "WorldController", "TrainingController", "FlingController" }
+local ORDER = {
+	"UIController",
+	"WorldController",
+	"RevealController",
+	"QuestController",
+	"TrainingController",
+	"FlingController",
+}
 
 for _, name in ORDER do
 	Controllers[name] = require(script.Controllers[name])

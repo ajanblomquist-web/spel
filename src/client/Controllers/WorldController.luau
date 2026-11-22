@@ -17,6 +17,7 @@ local player = Players.LocalPlayer
 local WorldController = {}
 
 local UIController
+local questGuideTarget
 
 local function shouldHide(prompt: ProximityPrompt): boolean
 	local ownerOnly = prompt:GetAttribute("OwnerOnly")
@@ -108,6 +109,31 @@ function WorldController.MyDigSpot(): BasePart?
 	return nil
 end
 
+-- Where the current quest wants you to go, if anywhere.
+questGuideTarget = function(): Vector3?
+	local guide = player:GetAttribute("QuestGuide")
+	local map = Workspace:FindFirstChild("Map")
+	if guide == "Rock" then
+		local rock = map and map:FindFirstChild("TrainingRock") :: BasePart?
+		return rock and rock.Position
+	elseif guide == "Pad" then
+		local pad = map and map:FindFirstChild("LaunchPad") :: BasePart?
+		return pad and pad.Position
+	elseif guide == "Home" then
+		if WorldController.IsHome() then
+			return nil
+		end
+		local floor = myPlotFloor()
+		return floor and floor.Position
+	elseif guide == "Thief" then
+		local npcs = Workspace:FindFirstChild("NPCs")
+		local thief = npcs and npcs:FindFirstChild("EggThief")
+		local root = thief and thief:FindFirstChild("HumanoidRootPart") :: BasePart?
+		return root and root.Position
+	end
+	return nil
+end
+
 local beam: Beam
 local fromAttachment: Attachment
 local toAttachment: Attachment
@@ -151,11 +177,17 @@ local function updateGuide()
 		status = "Carrying a " .. string.upper(player:GetAttribute("CarryRarity") or "") .. " egg! Run home!"
 	else
 		local spot = WorldController.MyDigSpot()
+		local questTarget = questGuideTarget()
 		if spot then
 			target = spot.Position
 			beam.Color = ColorSequence.new(Color3.fromRGB(255, 220, 80))
 			status = "Follow the line to your dig spot!"
-		elseif player:GetAttribute("PedestalsFull") then
+		elseif questTarget then
+			-- The current quest (and the tutorial) points somewhere.
+			target = questTarget
+			beam.Color = ColorSequence.new(Color3.fromRGB(90, 220, 255))
+		end
+		if player:GetAttribute("PedestalsFull") then
 			status = "Pedestals full! Sell a dino to hatch more."
 		end
 	end

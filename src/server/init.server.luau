@@ -9,6 +9,7 @@ Remotes.Setup()
 local ORDER = {
 	"DataService",
 	"MonetizationService",
+	"BoostService",
 	"MapService",
 	"MovementService",
 	"NestService",
@@ -17,6 +18,10 @@ local ORDER = {
 	"CarryService",
 	"FlingService",
 	"ShopService",
+	"QuestService",
+	"GiftService",
+	"StarterPackService",
+	"NpcService",
 }
 
 local Services = {}

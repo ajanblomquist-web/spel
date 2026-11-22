@@ -12,6 +12,10 @@
 --   Notify         server -> client   toast message (text, kind)
 --   OfflineEarned  server -> client   (coins, seconds) welcome-back popup
 --   StudioSetPass  client -> server   Studio only: toggle a pass for testing
+--   Hatched        server -> client   (record, incomePerSecond, isFirst) for the hatch reveal
+--   Celebrate      server -> client   (kind, data) big moments: "NewZone", "Breakthrough", "Quest"
+--   ClaimGift      client -> server   claim a playtime gift (index)
+--   StudioBuyProduct client -> server Studio only: grant a developer product for testing
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -26,6 +30,10 @@ local NAMES = {
 	"Notify",
 	"OfflineEarned",
 	"StudioSetPass",
+	"Hatched",
+	"Celebrate",
+	"ClaimGift",
+	"StudioBuyProduct",
 }
 
 local FOLDER_NAME = "Remotes"

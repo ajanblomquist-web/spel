@@ -18,7 +18,7 @@ Balance.TrainRange = 14 -- studs from the training rock
 Balance.FlingRange = 14 -- studs from the launch pad
 Balance.FlingCooldown = 1.5
 Balance.BaseDistance = 30 -- studs a brand-new player flings with a perfect-ish hit
-Balance.StrengthScale = 6 -- distance = (Base + StrengthScale * sqrt(Strength)) * shovel power * timing
+Balance.StrengthScale = 3 -- distance = (Base + StrengthScale * sqrt(Strength)) * shovel power * timing
 -- Timing meter. The needle sweeps 0 -> 1 -> 0; 0.5 is the centre.
 --   Perfect (green, thin):  |offset| <= PerfectWindow  -> PerfectMultiplier, builds a streak
 --   Great (yellow):         |offset| <= GreatWindow    -> 1.0
@@ -63,10 +63,29 @@ Balance.DataStoreName = "PlayerData_v1"
 
 -- Studio testing helpers. These only apply when you press Play in Studio,
 -- never in a published game.
+-- First egg: every new player's first egg is a Rare that hatches fast (the 5-minute wow moment).
+Balance.FirstEggRarity = "Rare"
+Balance.FirstEggHatchSeconds = 8
+
+-- Boosts (from quests, gifts and the Starter Pack)
+Balance.BoostMultiplier = 2
+
+-- Practice thief NPC that walks around the hub carrying an egg anyone can steal.
+Balance.ThiefWalkSpeed = 13
+Balance.ThiefRespawnSeconds = 40
+
 Balance.Studio = {
 	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
+	GiftTimeScale = 0.1, -- playtime gifts unlock 10x sooner while testing
 }
+
+function Balance.GiftTimeScale(): number
+	if RunService:IsStudio() then
+		return Balance.Studio.GiftTimeScale
+	end
+	return 1
+end
 
 function Balance.IncubationScale(): number
 	if RunService:IsStudio() then

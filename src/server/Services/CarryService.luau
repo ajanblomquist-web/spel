@@ -14,6 +14,7 @@ local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local EggRoll = require(script.Parent.Parent.EggRoll)
+local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
 local Visuals = require(script.Parent.Parent.Visuals)
 
@@ -144,6 +145,7 @@ trySteal = function(thief: Player, victim: Player)
 		return
 	end
 	DataService.Increment(thief, "Steals", 1)
+	Events.Fire("Steal", thief, egg, false)
 	Notify.Player(victim, thief.DisplayName .. " stole your " .. egg.Rarity .. " egg! Chase them!", "bad")
 	Notify.Player(thief, "You stole a " .. egg.Rarity .. " egg! Run home!", "good")
 end
@@ -162,10 +164,21 @@ local function dig(player: Player)
 		return
 	end
 	local egg = EggRoll.Roll(spot.Luck, spot.ZoneId)
+	local data = DataService.Get(player)
+	if not data.FirstEggDone then
+		-- Every new player's first egg is a guaranteed Rare that hatches fast.
+		data.FirstEggDone = true
+		if Eggs.RarityById[egg.Rarity].Order < Eggs.RarityById[Balance.FirstEggRarity].Order then
+			egg.Rarity = Balance.FirstEggRarity
+		end
+		egg.Fast = true
+	end
 	CarryService.ClearDigSpot(player)
-	if CarryService.StartCarry(player, egg, 0) then
-		local data = DataService.Get(player)
+	-- The first egg can't be stolen on the way home: a new player's first loop should feel good.
+	local protect = if egg.Fast then 120 else 0
+	if CarryService.StartCarry(player, egg, protect) then
 		data.Stats.EggsDug += 1
+		Events.Fire("Dig", player, egg)
 		Notify.Player(player, "You dug up a " .. string.upper(egg.Rarity) .. " egg! Carry it home!", "good")
 	end
 end
@@ -228,6 +241,7 @@ local function checkDeliveries()
 		if root and MapService.IsHome(player, root.Position) then
 			if NestService.TryAddEgg(player, carry.Egg) then
 				CarryService.StopCarry(player)
+				Events.Fire("Deliver", player, carry.Egg)
 				Notify.Player(player, "Egg is in the incubator!", "good")
 			else
 				local now = os.clock()

@@ -16,7 +16,7 @@ local player = Players.LocalPlayer
 
 local FlingController = {}
 
-local UIController, WorldController
+local UIController, WorldController, RevealController
 local meterStart: number? = nil
 local lastFling = 0
 
@@ -97,6 +97,55 @@ local function dustPuff(position: Vector3)
 	end)
 end
 
+-- Big distance number that counts up while your shovel flies.
+local function distanceCounter(result)
+	local label = UIController.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.32),
+		Size = UDim2.fromOffset(320, 80),
+		Text = "0m",
+		TextColor3 = Color3.new(1, 1, 1),
+		ZIndex = 30,
+		Parent = UIController.Gui(),
+	})
+	local scale = UIController.Make("UIScale", { Parent = label })
+	local started = os.clock()
+	while true do
+		local t = math.min((os.clock() - started) / result.Duration, 1)
+		-- Ease out so the number races, then slows near the end (more suspense).
+		local shown = math.floor(result.Distance * (1 - (1 - t) ^ 2))
+		label.Text = shown .. "m"
+		if t >= 1 then
+			break
+		end
+		RunService.RenderStepped:Wait()
+	end
+	label.TextColor3 = if result.Perfect
+		then Color3.fromRGB(120, 255, 140)
+		elseif result.Grade == "Miss" then Color3.fromRGB(255, 120, 120)
+		else Color3.fromRGB(255, 230, 90)
+	scale.Scale = 1.5
+	TweenService:Create(scale, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	task.wait(1.4)
+	TweenService:Create(label, TweenInfo.new(0.4), { TextTransparency = 1 }):Play()
+	task.wait(0.4)
+	label:Destroy()
+end
+
+local function perfectFlash()
+	local white = UIController.Make("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(200, 255, 210),
+		BackgroundTransparency = 0.4,
+		ZIndex = 29,
+		Parent = UIController.Gui(),
+	})
+	TweenService:Create(white, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+	task.delay(0.5, function()
+		white:Destroy()
+	end)
+end
+
 local function onFlingResult(result)
 	local isMine = result.UserId == player.UserId
 	local model = makeShovel(result.ShovelTier)
@@ -136,6 +185,19 @@ local function onFlingResult(result)
 	end)
 
 	if isMine then
+		task.spawn(distanceCounter, result)
+		if result.Perfect then
+			perfectFlash()
+		end
+		if result.NewZone then
+			task.delay(duration, function()
+				RevealController.Banner(
+					"NEW ZONE: " .. string.upper(result.ZoneName) .. "!",
+					"x" .. result.ZoneLuck .. " luck for eggs dug here",
+					Color3.fromRGB(230, 140, 40)
+				)
+			end)
+		end
 		local prefix = ""
 		if result.Perfect then
 			prefix = if result.Streak > 1 then "PERFECT x" .. result.Streak .. "! " else "PERFECT! "
@@ -158,6 +220,7 @@ end
 function FlingController.Start(Controllers)
 	UIController = Controllers.UIController
 	WorldController = Controllers.WorldController
+	RevealController = Controllers.RevealController
 
 	-- STOP! while the meter runs (top priority), FLING at the pad otherwise.
 	UIController.RegisterAction(100, function()

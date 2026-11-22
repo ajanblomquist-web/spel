@@ -11,7 +11,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local IncomeService = {}
 
-local DataService, MonetizationService, NestService
+local DataService, MonetizationService, NestService, BoostService
 local fractions: { [Player]: number } = {}
 
 -- Income of one dino before pass multipliers.
@@ -34,6 +34,7 @@ function IncomeService.Multiplier(player: Player): number
 	if MonetizationService.Has(player, "VIP") then
 		mult *= Passes.Effects.VIPCoinMultiplier
 	end
+	mult *= BoostService.Multiplier(player, "Coins")
 	return mult
 end
 
@@ -77,6 +78,7 @@ function IncomeService.Init(Services)
 	DataService = Services.DataService
 	MonetizationService = Services.MonetizationService
 	NestService = Services.NestService
+	BoostService = Services.BoostService
 
 	DataService.OnLoaded(function(player, data)
 		fractions[player] = 0
@@ -97,6 +99,8 @@ function IncomeService.Start()
 	while true do
 		task.wait(Balance.IncomeTickSeconds)
 		for _, player in DataService.LoadedPlayers() do
+			-- Recalculated every tick so boosts starting or ending show up at once.
+			IncomeService.Recalc(player)
 			local income = (player:GetAttribute("IncomePerSec") or 0) * Balance.IncomeTickSeconds
 			if income > 0 then
 				-- Keep coins whole numbers; carry the fraction to the next tick.

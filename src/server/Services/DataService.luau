@@ -44,6 +44,13 @@ local function defaultData()
 		Dinos = {}, -- { { Id, DinoId, Rarity, Size, Mutation } }, one per pedestal
 		Incubating = {}, -- { { Egg = { Id, Rarity, Size, Mutation }, ReadyAt = unix time } }
 		LastOnline = 0,
+		Quest = { Index = 1, Progress = 0 }, -- position in Config/Quests
+		Boosts = {}, -- { [boostName] = unix time it ends }
+		FirstEggDone = false, -- the guaranteed Rare first egg has been given
+		ZonesReached = {}, -- { [zoneId] = true }, for NEW ZONE banners
+		Purchases = {}, -- { [purchaseId] = true }, so a developer product is never granted twice
+		StarterPackBought = false,
+		StarterOfferShown = false,
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,
@@ -132,7 +139,13 @@ local function loadPlayer(player: Player)
 		canSave = false
 	end
 
+	-- Saves from milestone 1 have no Quest field: those players skip the tutorial.
+	local isMilestone1Save = type(data) == "table" and data.Quest == nil
 	data = reconcile(if type(data) == "table" then data else defaultData(), defaultData())
+	if isMilestone1Save and data.Stats.EggsDug > 0 then
+		data.FirstEggDone = true
+		data.Quest.Index = 6
+	end
 
 	if player.Parent == nil then
 		return -- left while loading
@@ -254,6 +267,11 @@ function DataService.SpendCoins(player: Player, amount: number): boolean
 	end
 	DataService.Set(player, "Coins", data.Coins - amount)
 	return true
+end
+
+-- Saves right away (used after Robux purchases).
+function DataService.SaveNow(player: Player)
+	task.spawn(savePlayer, player)
 end
 
 function DataService.NewId(): string

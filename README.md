@@ -2,7 +2,7 @@
 
 A Roblox game: train your Strength, fling your shovel across a giant dig site, dig up a fossil egg where it lands, carry it home before someone steals it, and hatch a dinosaur that earns coins (even while you're offline).
 
-This repo is **milestone 1: the greybox core loop**. Everything is plain blocks so we can test the fun before buying art. The whole world is built by code, so you don't need a place file.
+This repo has **milestone 1 (the greybox core loop)** and **milestone 2 (the first 5 and 30 minutes: tutorial, quests, celebrations and the progression curve)**. Everything is plain blocks so we can test the fun before buying art. The whole world is built by code, so you don't need a place file.
 
 Design doc: https://claude.ai/artifact/YDRaLZfJ13HRfQKPsLRWJC
 
@@ -62,7 +62,11 @@ Now press **Play**.
 
 **Testing game passes in Studio:** open **Passes** and press **Test it** on any pass to switch it on or off. This only works in Studio.
 
-**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch 10x faster in Studio and can give you starting coins.
+**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch and playtime gifts unlock 10x faster in Studio, and can give you starting coins.
+
+**Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
+
+**Testing the Starter Pack:** it pops up once after your first hatch. In Studio its button says "Get it (test)" and grants it without Robux. Later it's also at the top of the **Passes** menu.
 
 ---
 
@@ -85,6 +89,24 @@ Now press **Play**.
 - Saving with DataStores (autosave every 60 s and on leave)
 - Mobile-first UI: one big context button (TRAIN / FLING / STOP! / LOCK NEST), large side buttons, scales to any screen
 
+## What's in milestone 2 (first 5 and 30 minutes)
+
+**First 5 minutes: understand the game, feel something big**
+- Guided tutorial as the first 5 quests (Train, Fling, Dig, Carry home, Hatch), with a glowing blue line showing where to go
+- Your **first egg is always a Rare**, can't be stolen on the way home, and hatches in 8 seconds
+- **Full-screen hatch reveal** for every egg: the egg shakes (longer for rarer eggs), then a flash, spinning light rays and a dino card with rarity, size, mutation and coins/s
+- Fling feel: a distance counter that races up while the shovel flies, a green flash on Perfect, and a **NEW ZONE** banner the first time you reach a zone
+- **Starter Pack** offer shown once, right after the first hatch (a developer product: 2x Coins for 30 min, a Rare egg, 1,000 coins; nothing random)
+
+**First 30 minutes: burst, slow climb, breakthrough**
+- **Quest chain** of 21 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
+- **Egg Thief** NPC walking around the hub with an egg anyone can steal: teaches stealing and works in solo servers (counts for quests, not the Steals leaderboard)
+- **Playtime gifts** at 3, 8, 15, 25, 40 and 60 minutes (coins, 2x boosts, a Rare and an Epic egg)
+- The **Shop button bounces with a "!"** when you can afford your next upgrade
+- **Timed boosts** (2x Luck, Coins, Strength) with timers on the left
+- **Progression curve** retuned (checked with `tools/curve_sim.py`): Fern Valley ~3 min, Tar Pits ~10-15 min, then a slower climb to the **Gold Rock breakthrough** around minute 25-30 (6x Strength per rep, full-screen BREAKTHROUGH celebration) that sends you to the new zone:
+- **Amber Cliffs** (zone 4, 550-850m, x4 luck) with 4 dinos you can only get there
+
 ## Game passes
 
 All passes speed up the loop; none sell random rolls (so no odds-disclosure rules apply). To make them real:
@@ -105,7 +127,15 @@ All passes speed up the loop; none sell random rolls (so no odds-disclosure rule
 | Fortress Gate | Nest lock lasts 3 min | 149 |
 | VIP | +10% coins | 449 |
 
-Boost potions, Server Luck and Instant Hatch (developer products) come in milestone 3.
+## Developer products
+
+Create these in **Creator Hub > Monetization > Developer Products** and paste the IDs into `src/shared/Config/Products.luau`. Purchases are handled in `MonetizationService` (ProcessReceipt), and each purchase ID is saved so it's never granted twice.
+
+| Product | What you get | Suggested R$ |
+|---|---|---|
+| Starter Pack (one time) | 2x Coins for 30 min, a Rare egg, 1,000 coins | 99 |
+
+Boost potions, Server Luck and Instant Hatch come in milestone 3.
 
 ---
 
@@ -121,6 +151,9 @@ src/
       Dinos.luau          which dinos hatch from each rarity and their coins/s
       Shop.luau           rocks and shovels
       Passes.luau         game pass IDs, prices and effects
+      Products.luau       developer products (Starter Pack)
+      Quests.luau         the quest chain (the first 5 are the tutorial)
+      Gifts.luau          playtime gift times and rewards
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -136,7 +169,13 @@ src/
       TrainingService     Strength reps
       CarryService        dig spots, carrying eggs, stealing from carriers, delivery
       FlingService        meter check, distance, zone, luck
-      ShopService         buying upgrades
+      ShopService         buying upgrades, breakthrough celebration
+      QuestService        tutorial and quest chain
+      BoostService        timed 2x Luck / Coins / Strength
+      GiftService         playtime gifts
+      StarterPackService  Starter Pack offer and reward
+      NpcService          the Egg Thief
+    Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
     Visuals.luau          greybox eggs, dinos and labels
   client/                 StarterPlayerScripts.Client
@@ -144,7 +183,11 @@ src/
       UIController        all screen UI
       WorldController     guide line, timers, prompt filtering, LOCK NEST
       TrainingController  TRAIN button, Auto Train
-      FlingController     FLING button, meter, flying shovel, Auto Fling
+      FlingController     FLING button, meter, flying shovel, distance counter, Auto Fling
+      RevealController    hatch reveal, BREAKTHROUGH, banners, Starter Pack offer
+      QuestController     quest card, gift button, boost timers
+tools/
+  curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```
 
 **Cheating:** every roll, reward and purchase happens on the server. The client only says "I tapped the meter at X", and the server checks that against its own clock.
@@ -165,3 +208,4 @@ src/
 
 - `stylua src` formats the code (config in `stylua.toml`).
 - `selene src` lints it (run `selene generate-roblox-std` once first).
+- `python3 tools/curve_sim.py` prints when a typical player reaches each upgrade and zone. Change prices in `Config/Shop.luau`, mirror them at the top of the script, and re-run to see how the curve moves.

@@ -17,6 +17,7 @@ local Workspace = game:GetService("Workspace")
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
+local Products = require(ReplicatedStorage.Shared.Config.Products)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Shop = require(ReplicatedStorage.Shared.Config.Shop)
 
@@ -136,6 +137,9 @@ local meterFrame: Frame
 local meterNeedle: Frame
 local shopPanel: Frame
 local passesPanel: Frame
+local shopButton: TextButton
+local shopBadge: TextLabel
+local shopAttention = false
 local autoButtons = {}
 
 local actionProviders: { { Priority: number, Fn: () -> any } } = {}
@@ -208,8 +212,8 @@ local function buildTopBar()
 
 	statusLabel = label({
 		Name = "Status",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 66),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -186),
 		Size = UDim2.fromOffset(460, 34),
 		Text = "",
 		Visible = false,
@@ -227,8 +231,8 @@ local function buildToasts()
 	toastList = make("Frame", {
 		Name = "Toasts",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 106),
-		Size = UDim2.fromOffset(480, 220),
+		Position = UDim2.new(0.5, 0, 0, 68),
+		Size = UDim2.fromOffset(400, 220),
 		BackgroundTransparency = 1,
 		Parent = gui,
 	}, {
@@ -245,7 +249,7 @@ function UIController.Toast(text: string, kind: string?)
 	toastCount += 1
 	local frame = make("Frame", {
 		LayoutOrder = toastCount,
-		Size = UDim2.fromOffset(470, 44),
+		Size = UDim2.fromOffset(390, 44),
 		BackgroundColor3 = TOAST_COLORS[kind or "info"] or TOAST_COLORS.info,
 		Parent = toastList,
 	}, { corner(12), stroke(2) })
@@ -550,7 +554,10 @@ local function buildShop()
 		for tier, item in items do
 			if tier > 1 then
 				order += 1
-				local _, button = row(list, order, item.Name, describe(item))
+				local frame, button = row(list, order, item.Name, describe(item))
+				if item.Breakthrough then
+					frame.BackgroundColor3 = Color3.fromRGB(150, 110, 20)
+				end
 				button.Activated:Connect(function()
 					Remotes.Get("BuyUpgrade"):FireServer(category, tier)
 				end)
@@ -559,7 +566,11 @@ local function buildShop()
 		end
 	end
 	add("Rocks", Shop.Rocks, function(item)
-		return "Training rock: +" .. FormatNumber(item.StrengthPerRep) .. " Strength per rep"
+		local text = "Training rock: +" .. FormatNumber(item.StrengthPerRep) .. " Strength per rep"
+		if item.Breakthrough then
+			text = "BIG UPGRADE! " .. text
+		end
+		return text
 	end)
 	add("Shovels", Shop.Shovels, function(item)
 		return "Shovel: x" .. item.Power .. " distance, x" .. item.Luck .. " luck"
@@ -568,6 +579,22 @@ local function buildShop()
 end
 
 local passRows = {}
+local starterRow: Frame
+local starterButton: TextButton
+
+function UIController.PromptProduct(key: string)
+	local product = Products[key]
+	if not product then
+		return
+	end
+	if product.ProductId ~= 0 then
+		MarketplaceService:PromptProductPurchase(player, product.ProductId)
+	elseif RunService:IsStudio() then
+		Remotes.Get("StudioBuyProduct"):FireServer(key)
+	else
+		UIController.Toast(product.Name .. " is coming soon!", "info")
+	end
+end
 
 local function refreshPasses()
 	for key, button in passRows do
@@ -583,6 +610,14 @@ local function refreshPasses()
 			button.BackgroundColor3 = COLORS.Green
 		end
 	end
+	if starterRow then
+		starterRow.Visible = player:GetAttribute("StarterPackBought") ~= true
+		local product = Products.StarterPack
+		starterButton.Text = if product.ProductId ~= 0
+			then "R$ " .. product.Price
+			elseif RunService:IsStudio() then "Test buy"
+			else "Soon"
+	end
 	for key, button in autoButtons do
 		local owned = UIController.OwnsPass(key)
 		local on = owned and UIController.AutoState[key]
@@ -595,6 +630,12 @@ end
 local function buildPasses()
 	local list
 	passesPanel, list = buildPanel("PassesPanel", "Game Passes")
+	starterRow, starterButton = row(list, 0, Products.StarterPack.Name, Products.StarterPack.Description)
+	starterRow.BackgroundColor3 = Color3.fromRGB(150, 110, 20)
+	starterButton.BackgroundColor3 = COLORS.Green
+	starterButton.Activated:Connect(function()
+		UIController.PromptProduct("StarterPack")
+	end)
 	for i, pass in Passes.Sorted() do
 		local _, button = row(list, i, pass.Name, pass.Description)
 		button.Activated:Connect(function()
@@ -609,6 +650,36 @@ local function buildPasses()
 	refreshPasses()
 end
 
+-- The next upgrade you can afford (or a quest pointing at the Shop) makes the
+-- Shop button bounce with a "!" badge, so there's always something to aim for.
+local function nextAffordable(): boolean
+	local coins = player:GetAttribute("Coins") or 0
+	local rock = Shop.Rocks[(player:GetAttribute("RockTier") or 1) + 1]
+	local shovel = Shop.Shovels[(player:GetAttribute("ShovelTier") or 1) + 1]
+	return (rock ~= nil and coins >= rock.Price) or (shovel ~= nil and coins >= shovel.Price)
+end
+
+local function refreshShopAttention()
+	local want = nextAffordable() or player:GetAttribute("QuestGuide") == "Shop"
+	if want == shopAttention then
+		return
+	end
+	shopAttention = want
+	shopBadge.Visible = want
+	if want then
+		task.spawn(function()
+			local scale = shopButton:FindFirstChild("Pulse") :: UIScale
+			while shopAttention do
+				TweenService:Create(scale, TweenInfo.new(0.35, Enum.EasingStyle.Sine), { Scale = 1.12 })
+					:Play()
+				task.wait(0.35)
+				TweenService:Create(scale, TweenInfo.new(0.35, Enum.EasingStyle.Sine), { Scale = 1 }):Play()
+				task.wait(0.55)
+			end
+		end)
+	end
+end
+
 local function buildSideButtons()
 	local column = make("Frame", {
 		Name = "SideButtons",
@@ -621,13 +692,27 @@ local function buildSideButtons()
 		make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
 
-	local shopButton = bigButton({
+	shopButton = bigButton({
 		LayoutOrder = 1,
 		Size = UDim2.fromOffset(86, 86),
 		Text = "Shop",
 		BackgroundColor3 = COLORS.Blue,
 		Parent = column,
 	})
+	make("UIScale", { Name = "Pulse", Parent = shopButton })
+	shopBadge = make("TextLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, 6, 0, 6),
+		Size = UDim2.fromOffset(32, 32),
+		BackgroundColor3 = COLORS.Red,
+		Font = FONT,
+		Text = "!",
+		TextScaled = true,
+		TextColor3 = Color3.new(1, 1, 1),
+		Visible = false,
+		ZIndex = 5,
+		Parent = shopButton,
+	}, { corner(16), stroke(2) })
 	shopButton.Activated:Connect(function()
 		local open = not shopPanel.Visible
 		closeAllPanels()
@@ -721,6 +806,20 @@ function UIController.ShowOfflinePopup(coins: number, seconds: number)
 	end)
 end
 
+-- Shared building blocks for the other controllers ----------------------------------
+
+UIController.Make = make
+UIController.Label = label
+UIController.Button = bigButton
+UIController.Corner = corner
+UIController.Stroke = stroke
+UIController.Colors = COLORS
+UIController.Font = FONT
+
+function UIController.Gui(): ScreenGui
+	return gui
+end
+
 -- Start --------------------------------------------------------------------------
 
 function UIController.Start()
@@ -760,7 +859,7 @@ function UIController.Start()
 		end)
 	end
 	player.AttributeChanged:Connect(function(name)
-		if string.sub(name, 1, 5) == "Pass_" then
+		if string.sub(name, 1, 5) == "Pass_" or name == "StarterPackBought" then
 			refreshPasses()
 		end
 	end)
@@ -771,6 +870,7 @@ function UIController.Start()
 	task.spawn(function()
 		while true do
 			refreshAction()
+			refreshShopAttention()
 			task.wait(0.1)
 		end
 	end)

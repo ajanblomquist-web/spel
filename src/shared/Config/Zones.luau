@@ -41,6 +41,15 @@ local Zones: { Zone } = {
 		Color = Color3.fromRGB(58, 52, 60),
 		Material = Enum.Material.Slate,
 	},
+	{
+		Id = "AmberCliffs",
+		Name = "Amber Cliffs",
+		StartDistance = 550,
+		EndDistance = 850,
+		Luck = 4,
+		Color = Color3.fromRGB(235, 160, 50),
+		Material = Enum.Material.Sandstone,
+	},
 }
 
 local ZoneModule = {}

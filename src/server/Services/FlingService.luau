@@ -14,10 +14,11 @@ local Passes = require(ReplicatedStorage.Shared.Config.Passes)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Shop = require(ReplicatedStorage.Shared.Config.Shop)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
+local Events = require(script.Parent.Parent.Events)
 
 local FlingService = {}
 
-local DataService, MapService, MonetizationService, CarryService
+local DataService, MapService, MonetizationService, CarryService, BoostService
 
 local sessions: { [Player]: number } = {} -- player -> os.clock() when the meter started
 local lastFling: { [Player]: number } = {}
@@ -75,6 +76,11 @@ local function resolve(player: Player, meterValue: number)
 	if MonetizationService.Has(player, "LuckyShovel") then
 		luck *= Passes.Effects.LuckMultiplier
 	end
+	luck *= BoostService.Multiplier(player, "Luck")
+
+	-- First time reaching a zone gets a NEW ZONE banner (the first zone doesn't count).
+	local newZone = zone.StartDistance > 0 and not data.ZonesReached[zone.Id]
+	data.ZonesReached[zone.Id] = true
 
 	local halfWidth = MapService.CanyonWidth / 2 - 12
 	local origin = MapService.LaunchOrigin
@@ -99,7 +105,10 @@ local function resolve(player: Player, meterValue: number)
 		Grade = grade,
 		Streak = streak,
 		ShovelTier = data.ShovelTier,
+		NewZone = newZone,
+		ZoneLuck = zone.Luck,
 	})
+	Events.Fire("Fling", player, distance, zone.Id, grade)
 
 	local zoneId = zone.Id
 	task.delay(Balance.FlightSeconds, function()
@@ -114,6 +123,7 @@ function FlingService.Init(Services)
 	MapService = Services.MapService
 	MonetizationService = Services.MonetizationService
 	CarryService = Services.CarryService
+	BoostService = Services.BoostService
 end
 
 function FlingService.Start()

@@ -7,10 +7,11 @@ local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Shop = require(ReplicatedStorage.Shared.Config.Shop)
+local Events = require(script.Parent.Parent.Events)
 
 local TrainingService = {}
 
-local DataService, MapService, MonetizationService
+local DataService, MapService, MonetizationService, BoostService
 local lastRep: { [Player]: number } = {}
 
 local function isNearRock(player: Player): boolean
@@ -27,6 +28,7 @@ function TrainingService.Init(Services)
 	DataService = Services.DataService
 	MapService = Services.MapService
 	MonetizationService = Services.MonetizationService
+	BoostService = Services.BoostService
 end
 
 function TrainingService.Start()
@@ -50,7 +52,9 @@ function TrainingService.Start()
 		if MonetizationService.Has(player, "DoubleStrength") then
 			gain *= Passes.Effects.StrengthMultiplier
 		end
+		gain *= BoostService.Multiplier(player, "Strength")
 		DataService.Increment(player, "Strength", gain)
+		Events.Fire("TrainRep", player, gain)
 	end)
 
 	game:GetService("Players").PlayerRemoving:Connect(function(player)

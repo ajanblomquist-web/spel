@@ -7,6 +7,7 @@ local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Shop = require(ReplicatedStorage.Shared.Config.Shop)
 local Notify = require(script.Parent.Parent.Notify)
+local Events = require(script.Parent.Parent.Events)
 
 local ShopService = {}
 
@@ -45,7 +46,16 @@ function ShopService.Start()
 			return
 		end
 		DataService.Set(player, category.Field, tier)
-		Notify.Player(player, "Unlocked " .. item.Name .. "!", "good")
+		Events.Fire("Buy", player, categoryName, tier)
+		if item.Breakthrough then
+			local previous = category.List[tier - 1]
+			Remotes.Get("Celebrate"):FireClient(player, "Breakthrough", {
+				Name = item.Name,
+				Multiplier = math.floor(item.StrengthPerRep / previous.StrengthPerRep),
+			})
+		else
+			Notify.Player(player, "Unlocked " .. item.Name .. "!", "good")
+		end
 	end)
 end
 

@@ -36,9 +36,10 @@ function EggRoll.Roll(luck: number, zoneId: string): Egg
 	}
 end
 
--- Which dinosaur hatches from an egg (any dino of the egg's rarity).
-function EggRoll.PickDino(rarityId: string): string
-	local options = Dinos.ByRarity[rarityId] or Dinos.ByRarity.Common
+-- Which dinosaur hatches from an egg: any dino of the egg's rarity, plus the
+-- zone's exclusives if it was dug in a zone that has them.
+function EggRoll.PickDino(rarityId: string, zoneId: string?): string
+	local options = Dinos.Pool(rarityId, zoneId)
 	return options[rng:NextInteger(1, #options)].Id
 end
 

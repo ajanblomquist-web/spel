@@ -5,8 +5,9 @@
 -- Ownership is mirrored to the player as attributes ("Pass_DoubleCoins" = true)
 -- so the client UI can show "Owned" and enable the auto toggles.
 --
--- Developer products (boost potions, Instant Hatch) come in milestone 3 with a
--- ProcessReceipt handler. Nothing here sells a random roll.
+-- Developer products (Config/Products) go through ProcessReceipt. Each purchase
+-- ID is remembered in the player's data so a product is never granted twice.
+-- Nothing here sells a random roll.
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
@@ -14,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
+local Products = require(ReplicatedStorage.Shared.Config.Products)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Notify)
 
@@ -21,6 +23,8 @@ local MonetizationService = {}
 
 local owned: { [Player]: { [string]: boolean } } = {}
 local changedCallbacks = {}
+local productHandlers: { [string]: (Player, any) -> () } = {}
+local DataService
 
 local function setOwned(player: Player, key: string, value: boolean)
 	owned[player] = owned[player] or {}
@@ -53,7 +57,44 @@ function MonetizationService.OnPassChanged(callback: (Player, string, boolean) -
 	table.insert(changedCallbacks, callback)
 end
 
+-- handler(player, data) gives the player what they bought.
+function MonetizationService.OnProduct(key: string, handler: (Player, any) -> ())
+	productHandlers[key] = handler
+end
+
+local function productKeyForId(productId: number): string?
+	for key, product in Products do
+		if product.ProductId == productId and productId ~= 0 then
+			return key
+		end
+	end
+	return nil
+end
+
+-- Returns true once the product has been given (or was given before).
+local function grantProduct(player: Player, key: string, purchaseId: string?): boolean
+	local data = DataService.Get(player)
+	local handler = productHandlers[key]
+	if not data or not handler then
+		return false
+	end
+	if purchaseId and data.Purchases[purchaseId] then
+		return true
+	end
+	local ok, err = pcall(handler, player, data)
+	if not ok then
+		warn("[MonetizationService] Product " .. key .. " failed: " .. tostring(err))
+		return false
+	end
+	if purchaseId then
+		data.Purchases[purchaseId] = true
+	end
+	DataService.SaveNow(player)
+	return true
+end
+
 function MonetizationService.Init(Services)
+	DataService = Services.DataService
 	-- Check passes before the other services set up the player, so things like
 	-- extra pedestals and offline income already know what the player owns.
 	Services.DataService.OnLoaded(function(player)
@@ -86,6 +127,25 @@ function MonetizationService.Start()
 
 	Players.PlayerRemoving:Connect(function(player)
 		owned[player] = nil
+	end)
+
+	MarketplaceService.ProcessReceipt = function(info)
+		local player = Players:GetPlayerByUserId(info.PlayerId)
+		local key = productKeyForId(info.ProductId)
+		if not player or not key then
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
+		if grantProduct(player, key, info.PurchaseId) then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	-- Studio-only: test a developer product without Robux.
+	Remotes.Get("StudioBuyProduct").OnServerEvent:Connect(function(player, key)
+		if RunService:IsStudio() and type(key) == "string" and Products[key] then
+			grantProduct(player, key, nil)
+		end
 	end)
 
 	-- Studio-only test switch so you can try every pass without buying it.
