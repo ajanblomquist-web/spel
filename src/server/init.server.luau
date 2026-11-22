@@ -26,6 +26,9 @@ local ORDER = {
 	"NpcService",
 	"WeaponService",
 	"HintService",
+	"RebirthService",
+	"DailyService",
+	"EventService",
 }
 
 local Services = {}

@@ -20,6 +20,7 @@ local Notify = require(script.Parent.Parent.Notify)
 local FlingService = {}
 
 local DataService, MapService, MonetizationService, CarryService, BoostService, NestService
+local RebirthService, EventService
 
 local sessions: { [Player]: number } = {} -- player -> os.clock() when the meter started
 local lastFling: { [Player]: number } = {}
@@ -96,6 +97,8 @@ local function resolve(player: Player, meterValue: number, auto: boolean?)
 		luck *= Passes.Effects.LuckMultiplier
 	end
 	luck *= BoostService.Multiplier(player, "Luck")
+	luck *= RebirthService.Multiplier(player, "Luck")
+	luck *= EventService.Multiplier("Luck")
 
 	-- First time reaching a zone gets a NEW ZONE banner (the first zone doesn't count).
 	local newZone = zone.StartDistance > 0 and not data.ZonesReached[zone.Id]
@@ -150,6 +153,8 @@ function FlingService.Init(Services)
 	CarryService = Services.CarryService
 	BoostService = Services.BoostService
 	NestService = Services.NestService
+	RebirthService = Services.RebirthService
+	EventService = Services.EventService
 end
 
 function FlingService.Start()

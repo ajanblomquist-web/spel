@@ -13,6 +13,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local IncomeService = {}
 
 local DataService, MonetizationService, NestService, BoostService
+local RebirthService, EventService
 local fractions: { [Player]: number } = {}
 
 -- Income of one dino before pass multipliers.
@@ -37,6 +38,8 @@ function IncomeService.Multiplier(player: Player): number
 		mult *= Passes.Effects.VIPCoinMultiplier
 	end
 	mult *= BoostService.Multiplier(player, "Coins")
+	mult *= RebirthService.Multiplier(player, "Coins")
+	mult *= EventService.Multiplier("Coins")
 	return mult
 end
 
@@ -81,6 +84,8 @@ function IncomeService.Init(Services)
 	MonetizationService = Services.MonetizationService
 	NestService = Services.NestService
 	BoostService = Services.BoostService
+	RebirthService = Services.RebirthService
+	EventService = Services.EventService
 
 	DataService.OnLoaded(function(player, data)
 		fractions[player] = 0

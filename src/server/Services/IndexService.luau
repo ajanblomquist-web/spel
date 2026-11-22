@@ -23,6 +23,8 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local IndexService = {}
 
+local EventService = require(script.Parent.EventService)
+
 local DataService
 
 local rng = Random.new()
@@ -48,7 +50,8 @@ function IndexService.RollBaby(player: Player): boolean
 	if RunService:IsStudio() and Balance.Studio.BabyChance > 0 then
 		return rng:NextNumber() < Balance.Studio.BabyChance
 	end
-	return rng:NextNumber() < Index.BabyChance * IndexService.BabyLuck(player)
+	return rng:NextNumber()
+		< Index.BabyChance * IndexService.BabyLuck(player) * EventService.Multiplier("Baby")
 end
 
 local function sync(player: Player)

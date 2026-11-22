@@ -123,6 +123,9 @@ Now press **Play**.
 - **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
 - **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Strength boost; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
 - **6 pedestals** for everyone (12 with Extra Pedestals).
+- **Rebirth** (top row of the Shop, after reaching Amber Cliffs): pay coins (1M, then 3x more each time) to reset coins, Strength, rock and shovel. You keep dinos, Index, eggs, passes and weapons, and get +50% Strength, +25% coins and +10% luck forever per rebirth, a "Rebirth N" tag above your head and a Rebirths column on the player list. Numbers in `Config/Rebirth.luau`.
+- **Daily streak**: a 7-day reward track (coins, boosts, Rare egg, Epic egg on day 7) that pops up once a day after the tutorial. Missing a day starts it over. Rewards in `Config/Daily.luau`.
+- **Server events**: a 10-minute event at the start of every hour, the same on every server: Double Luck, Double Coins, Golden Hour (3x mutations), Baby Boom (5x Baby odds), Strength Surge. A banner announces it and a timer pill shows under the top bar. As the game owner (or anyone in Studio) type `/event DoubleLuck` (optionally `/event BabyBoom 30` for 30 minutes) or `/event stop` in chat; it reaches every server. Events in `Config/WorldEvents.luau`.
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
@@ -179,6 +182,9 @@ src/
       Index.luau          Dino Index variants, page rewards, Baby odds
       Weapons.luau        bonk weapons and skins
       Social.luau         group ID and reward, pass hint texts
+      Rebirth.luau        rebirth price and bonuses
+      Daily.luau          daily streak rewards
+      WorldEvents.luau    server events
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -200,6 +206,9 @@ src/
       LeaderboardService  global and weekly leaderboard boards
       WeaponService       bonk weapons, skins, buying, the bonk
       HintService         pass hints and the group reward
+      RebirthService      rebirth, permanent bonuses, rebirth tag
+      DailyService        daily login streak
+      EventService        hourly server events and /event commands
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
@@ -218,6 +227,9 @@ src/
       IndexController     Dino Index button and panel
       WeaponController    BONK! button, hit effects, weapon rows in the Shop
       HintController      hint card, "Join our group" row
+      RebirthController   Rebirth row in the Shop
+      DailyController     daily streak popup
+      EventController     event timer pill
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

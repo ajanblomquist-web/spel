@@ -29,9 +29,9 @@ local removingCallbacks = {}
 local store: DataStore? = nil
 
 -- Fields that are mirrored onto the Player as attributes for the client UI.
-local REPLICATED = { "Coins", "Strength", "RockTier", "ShovelTier" }
+local REPLICATED = { "Coins", "Strength", "RockTier", "ShovelTier", "Rebirths" }
 -- Fields shown on the leaderboard.
-local LEADERSTATS = { "Coins", "Strength", "Steals" }
+local LEADERSTATS = { "Coins", "Strength", "Steals", "Rebirths" }
 
 local function defaultData()
 	return {
@@ -56,6 +56,8 @@ local function defaultData()
 		Weekly = { Week = 0, Steals = 0, EggsDug = 0 }, -- weekly leaderboard counters
 		Weapons = { Owned = {}, Equipped = "Stick" }, -- bonk weapons (+ Skin = skinId)
 		GroupRewardClaimed = false, -- the one-time reward for joining the group
+		Rebirths = 0,
+		Daily = { Streak = 0, LastDay = 0 }, -- login streak; LastDay = UTC day number of the last claim
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,

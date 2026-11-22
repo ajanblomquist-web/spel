@@ -15,7 +15,7 @@ local Events = require(script.Parent.Parent.Events)
 
 local TrainingService = {}
 
-local DataService, MapService, MonetizationService, BoostService
+local DataService, MapService, MonetizationService, BoostService, RebirthService, EventService
 local lastRep: { [Player]: number } = {}
 
 local function isNearRock(player: Player): boolean
@@ -33,6 +33,8 @@ function TrainingService.Init(Services)
 	MapService = Services.MapService
 	MonetizationService = Services.MonetizationService
 	BoostService = Services.BoostService
+	RebirthService = Services.RebirthService
+	EventService = Services.EventService
 end
 
 local function doRep(player: Player)
@@ -47,6 +49,8 @@ local function doRep(player: Player)
 		gain *= Passes.Effects.StrengthMultiplier
 	end
 	gain *= BoostService.Multiplier(player, "Strength")
+	gain *= RebirthService.Multiplier(player, "Strength")
+	gain *= EventService.Multiplier("Strength")
 	DataService.Increment(player, "Strength", gain)
 	Events.Fire("TrainRep", player, gain)
 end

@@ -24,6 +24,8 @@
 --                  server -> all      (attacker, victim, direction) play the hit
 --   Hint           server -> client   (text, passKey or "Group") a pass hint card
 --   GroupCheck     client -> server   re-check group membership after the join prompt
+--   Rebirth        client -> server   rebirth (pay coins, reset, get permanent bonuses)
+--   ClaimDaily     client -> server   claim today's login streak reward
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -49,6 +51,8 @@ local NAMES = {
 	"Bonk",
 	"Hint",
 	"GroupCheck",
+	"Rebirth",
+	"ClaimDaily",
 }
 
 local FOLDER_NAME = "Remotes"

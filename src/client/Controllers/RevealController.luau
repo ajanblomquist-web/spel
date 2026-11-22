@@ -329,6 +329,50 @@ local function showBreakthrough(data)
 	stopRays()
 end
 
+-- Rebirth ----------------------------------------------------------------------------
+
+local function showRebirth(data)
+	local color = Color3.fromRGB(255, 120, 220)
+	local root, waitClosed = overlay(9)
+	flash(root)
+	local stopRays = rays(root, color, 14)
+	local title = UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.36),
+		Size = UDim2.fromOffset(600, 90),
+		Text = "REBIRTH " .. data.Count .. "!",
+		TextColor3 = color,
+		ZIndex = 60,
+		Parent = root,
+	})
+	local scale = UI.Make("UIScale", { Scale = 0.1, Parent = title })
+	tween(scale, 0.5, { Scale = 1 }, Enum.EasingStyle.Back)
+	UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.54),
+		Size = UDim2.fromOffset(560, 40),
+		Text = string.format(
+			"Forever: x%.2f Strength, x%.2f Coins, x%.2f Luck",
+			data.Strength,
+			data.Coins,
+			data.Luck
+		),
+		ZIndex = 60,
+		Parent = root,
+	})
+	UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.65),
+		Size = UDim2.fromOffset(560, 34),
+		Text = "Your dinos and Index stay. Climb back up faster than ever!",
+		TextColor3 = Color3.fromRGB(255, 200, 230),
+		ZIndex = 60,
+		Parent = root,
+	})
+	waitClosed()
+	stopRays()
+end
+
 -- Starter Pack offer -------------------------------------------------------------------
 
 local function showStarterOffer()
@@ -420,6 +464,18 @@ function RevealController.Start(Controllers)
 					.. string.format("%.1f", data.BabyLuck),
 				Color3.fromRGB(255, 140, 200)
 			)
+		elseif kind == "Event" then
+			RevealController.Banner(data.Name .. "!", data.Text, Color3.fromRGB(255, 150, 40))
+		elseif kind == "Daily" then
+			RevealController.Banner(
+				"DAY " .. data.Streak .. " STREAK!",
+				data.Text,
+				Color3.fromRGB(60, 150, 255)
+			)
+		elseif kind == "Rebirth" then
+			queueFullscreen(function()
+				showRebirth(data)
+			end)
 		elseif kind == "StarterOffer" then
 			queueFullscreen(showStarterOffer)
 		end
