@@ -152,6 +152,7 @@ local function grabDropped(grabber: Player, owner: Player, egg, part: BasePart)
 	Notify.Player(grabber, "You grabbed a " .. egg.Rarity .. " egg! Run home!", "good")
 	if owner.Parent == Players then
 		Notify.Player(owner, grabber.DisplayName .. " grabbed your egg! Chase them!", "bad")
+		Events.Fire("StolenFrom", owner, "Carry")
 	end
 end
 
@@ -242,6 +243,7 @@ trySteal = function(thief: Player, victim: Player)
 	DataService.Increment(thief, "Steals", 1)
 	Events.Fire("Steal", thief, egg, false)
 	Notify.Player(victim, thief.DisplayName .. " stole your " .. egg.Rarity .. " egg! Chase them!", "bad")
+	Events.Fire("StolenFrom", victim, "Carry")
 	Notify.Player(thief, "You stole a " .. egg.Rarity .. " egg! Run home!", "good")
 end
 
@@ -349,6 +351,7 @@ local function checkDeliveries()
 				if not lastFullWarning[player] or now - lastFullWarning[player] > 6 then
 					lastFullWarning[player] = now
 					Notify.Player(player, "All incubators are busy. Wait for one to hatch!", "bad")
+					Events.Fire("IncubatorsFull", player)
 				end
 			end
 		end

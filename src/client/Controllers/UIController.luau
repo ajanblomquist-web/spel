@@ -860,6 +860,10 @@ function UIController.ShopList(): ScrollingFrame
 end
 UIController.Row = row
 
+function UIController.PassesList(): ScrollingFrame
+	return passesPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame
+end
+
 -- Opens one panel and closes the others (or closes it if it was open).
 function UIController.TogglePanel(panel: Frame)
 	local open = not panel.Visible

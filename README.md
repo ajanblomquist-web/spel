@@ -82,7 +82,7 @@ Now press **Play**.
   - Free **nest lock** for 60 s, then a 60 s cooldown (Fortress Gate pass makes it 3 min)
   - **Steals** column on the leaderboard, next to Coins and Strength
   - Hatched dinos can never be stolen, only eggs
-- 3 incubators, 4 pedestals (+6 with a pass), selling dinos
+- 3 incubators, 6 pedestals (+6 with a pass), selling dinos
 - Coins per second, offline income (50%, up to 8 hours) with a welcome-back popup
 - Server-wide shout when someone hatches a Legendary or better
 - All 10 game passes wired up (see below)
@@ -120,6 +120,9 @@ Now press **Play**.
 - **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
 - **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
 - **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
+- **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
+- **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Luck and coins; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
+- **6 pedestals** for everyone (12 with Extra Pedestals).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
@@ -175,6 +178,7 @@ src/
       Gifts.luau          playtime gift times and rewards
       Index.luau          Dino Index variants, page rewards, Baby odds
       Weapons.luau        bonk weapons and skins
+      Social.luau         group ID and reward, pass hint texts
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -195,6 +199,7 @@ src/
       IndexService        Dino Index, page rewards, Baby roll
       LeaderboardService  global and weekly leaderboard boards
       WeaponService       bonk weapons, skins, buying, the bonk
+      HintService         pass hints and the group reward
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
@@ -212,6 +217,7 @@ src/
       QuestController     quest card, gift button, boost timers
       IndexController     Dino Index button and panel
       WeaponController    BONK! button, hit effects, weapon rows in the Shop
+      HintController      hint card, "Join our group" row
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

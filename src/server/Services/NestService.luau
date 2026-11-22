@@ -154,6 +154,7 @@ stealFromNest = function(owner: Player, thief: Player, eggId: string)
 				"bad"
 			)
 			Notify.Player(thief, "You stole a " .. entry.Egg.Rarity .. " egg! Run home!", "good")
+			Events.Fire("StolenFrom", owner, "Nest")
 			return
 		end
 	end

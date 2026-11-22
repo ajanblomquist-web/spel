@@ -55,6 +55,7 @@ local function defaultData()
 		IndexPages = {}, -- { [rarityId] = true }, Index pages whose reward was paid
 		Weekly = { Week = 0, Steals = 0, EggsDug = 0 }, -- weekly leaderboard counters
 		Weapons = { Owned = {}, Equipped = "Stick" }, -- bonk weapons (+ Skin = skinId)
+		GroupRewardClaimed = false, -- the one-time reward for joining the group
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,

@@ -22,6 +22,8 @@
 --   EquipSkin      client -> server   (skinId or nil)
 --   Bonk           client -> server   (victim) bonk an egg carrier
 --                  server -> all      (attacker, victim, direction) play the hit
+--   Hint           server -> client   (text, passKey or "Group") a pass hint card
+--   GroupCheck     client -> server   re-check group membership after the join prompt
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -45,6 +47,8 @@ local NAMES = {
 	"EquipWeapon",
 	"EquipSkin",
 	"Bonk",
+	"Hint",
+	"GroupCheck",
 }
 
 local FOLDER_NAME = "Remotes"

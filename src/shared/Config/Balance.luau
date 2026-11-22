@@ -58,7 +58,7 @@ Balance.NestLockSeconds = 60 -- free nest lock: nobody can steal from your incub
 Balance.NestLockCooldown = 60 -- wait this long after a lock ends before locking again
 
 -- Base
-Balance.BasePedestals = 4
+Balance.BasePedestals = 6
 Balance.IncubatorSlots = 3
 Balance.DeliveryRadius = 20 -- studs from your plot centre that counts as "home"
 Balance.SellSeconds = 120 -- selling a dino pays this many seconds of its income

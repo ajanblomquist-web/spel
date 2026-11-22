@@ -10,6 +10,7 @@ local ORDER = {
 	"TrainingController",
 	"FlingController",
 	"WeaponController",
+	"HintController",
 }
 
 for _, name in ORDER do

@@ -16,7 +16,7 @@ import statistics
 
 TAPS_PER_SECOND = 3
 TRAIN_SECONDS = 20
-PEDESTALS = 4
+PEDESTALS = 6
 STRENGTH_SCALE = 3  # Balance.StrengthScale
 BASE_DISTANCE = 30  # Balance.BaseDistance
 ROCKS = [(0, 2), (150, 5), (1500, 10), (55000, 60), (400000, 180), (4000000, 600)]  # (price, strength/rep)

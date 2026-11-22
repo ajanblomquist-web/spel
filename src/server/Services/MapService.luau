@@ -52,11 +52,13 @@ local PLOT_COLORS = {
 -- Pedestal slots in plot-local space. The first Balance.BasePedestals are
 -- always shown; the rest appear with the Extra Pedestals pass.
 local PEDESTAL_OFFSETS = {
-	-- back row: the 4 every player has
-	Vector3.new(-10.5, 0, -12),
-	Vector3.new(-3.5, 0, -12),
-	Vector3.new(3.5, 0, -12),
-	Vector3.new(10.5, 0, -12),
+	-- back row: the 6 every player has
+	Vector3.new(-15, 0, -12),
+	Vector3.new(-9, 0, -12),
+	Vector3.new(-3, 0, -12),
+	Vector3.new(3, 0, -12),
+	Vector3.new(9, 0, -12),
+	Vector3.new(15, 0, -12),
 	-- middle row: +6 from the Extra Pedestals pass
 	Vector3.new(-15, 0, -4.5),
 	Vector3.new(-9, 0, -4.5),
