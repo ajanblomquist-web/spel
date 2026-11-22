@@ -130,7 +130,7 @@ end
 
 local gui: ScreenGui
 local uiScale: UIScale
-local coinsLabel, incomeLabel, strengthLabel, statusLabel
+local coinsLabel, incomeLabel, strengthLabel, statusLabel, speedLabel
 local toastList: Frame
 local actionButton: TextButton
 local meterFrame: Frame
@@ -219,6 +219,30 @@ local function buildTopBar()
 		Visible = false,
 		Parent = gui,
 	})
+
+	-- Field speed indicator: shows while you're sped up out in the field.
+	speedLabel = label({
+		Name = "FieldSpeed",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -224),
+		Size = UDim2.fromOffset(220, 30),
+		Text = "",
+		TextColor3 = COLORS.Green,
+		Visible = false,
+		Parent = gui,
+	})
+end
+
+-- Shows "Speed x1.8" and widens the camera a little, so going fast feels fast.
+local function refreshFieldSpeed()
+	local field = player:GetAttribute("FieldSpeed") or 1
+	speedLabel.Visible = field >= 1.1
+	speedLabel.Text = string.format("Speed x%.1f", field)
+	local camera = Workspace.CurrentCamera
+	if camera then
+		local fov = 70 + (field - 1) * 8
+		TweenService:Create(camera, TweenInfo.new(0.4), { FieldOfView = fov }):Play()
+	end
 end
 
 local function refreshStats()
@@ -660,7 +684,9 @@ local function nextAffordable(): boolean
 end
 
 local function refreshShopAttention()
-	local want = nextAffordable() or player:GetAttribute("QuestGuide") == "Shop"
+	-- During the tutorial only the quest decides, so the Shop doesn't compete with the guide line.
+	local guided = player:GetAttribute("QuestGuide") == "Shop"
+	local want = guided or (not player:GetAttribute("QuestTutorial") and nextAffordable())
 	if want == shopAttention then
 		return
 	end
@@ -847,6 +873,8 @@ function UIController.Start()
 	buildSideButtons()
 
 	refreshStats()
+	refreshFieldSpeed()
+	player:GetAttributeChangedSignal("FieldSpeed"):Connect(refreshFieldSpeed)
 	refreshPasses()
 	for _, attribute in { "Coins", "IncomePerSec", "Strength" } do
 		player:GetAttributeChangedSignal(attribute):Connect(refreshStats)

@@ -62,7 +62,7 @@ Now press **Play**.
 
 **Testing game passes in Studio:** open **Passes** and press **Test it** on any pass to switch it on or off. This only works in Studio.
 
-**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch and playtime gifts unlock 10x faster in Studio, and can give you starting coins.
+**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch 10x faster in Studio, can make playtime gifts unlock sooner (`GiftTimeScale`, real timing by default), and can give you starting coins.
 
 **Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
 
@@ -101,6 +101,7 @@ Now press **Play**.
 **First 30 minutes: burst, slow climb, breakthrough**
 - **Quest chain** of 21 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
 - **Egg Thief** NPC walking around the hub with an egg anyone can steal: teaches stealing and works in solo servers (counts for quests, not the Steals leaderboard)
+- **Field speed**: you walk faster the further out into the fling field you are (up to 2.25x at 600 studs), so fetching far eggs stays quick
 - **Playtime gifts** at 3, 8, 15, 25, 40 and 60 minutes (coins, 2x boosts, a Rare and an Epic egg)
 - The **Shop button bounces with a "!"** when you can afford your next upgrade
 - **Timed boosts** (2x Luck, Coins, Strength) with timers on the left
@@ -163,7 +164,7 @@ src/
       DataService         load / save / leaderboard
       MonetizationService game pass ownership
       MapService          builds the greybox world and the 8 plots
-      MovementService     walk speed (carrying, Speedy Boots)
+      MovementService     walk speed (carrying, Speedy Boots, field speed)
       NestService         incubators, hatching, pedestals, selling, nest stealing, nest lock
       IncomeService       coins per second and offline income
       TrainingService     Strength reps

@@ -164,7 +164,8 @@ local function refreshTimers()
 	local nextIndex = player:GetAttribute("NextGift")
 	local gift = nextIndex and Gifts[nextIndex]
 	local startedAt = player:GetAttribute("SessionStartServer")
-	if not gift or not startedAt then
+	-- Hidden during the tutorial so new players see one thing at a time.
+	if not gift or not startedAt or player:GetAttribute("QuestTutorial") then
 		giftButton.Visible = false
 	else
 		giftButton.Visible = true

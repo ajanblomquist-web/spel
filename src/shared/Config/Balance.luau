@@ -9,6 +9,13 @@ local Balance = {}
 -- Movement
 Balance.WalkSpeed = 24
 Balance.CarrySpeedMultiplier = 0.75 -- carrying an egg makes you slower
+-- Field speed: the further out into the fling field you are, the faster you walk,
+-- so fetching far eggs doesn't get tedious. Ramps from 1x at FieldSpeedStart studs
+-- past the launch pad up to FieldSpeedMax at FieldSpeedFullAt studs and beyond.
+-- Stacks with Speedy Boots and the carry slowdown. No effect in the hub.
+Balance.FieldSpeedStart = 40
+Balance.FieldSpeedFullAt = 600
+Balance.FieldSpeedMax = 2.25
 
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)
@@ -23,12 +30,12 @@ Balance.StrengthScale = 3 -- distance = (Base + StrengthScale * sqrt(Strength)) 
 --   Perfect (green, thin):  |offset| <= PerfectWindow  -> PerfectMultiplier, builds a streak
 --   Great (yellow):         |offset| <= GreatWindow    -> 1.0
 --   Miss (red):             falls from MissMultiplier at the yellow edge to WorstTimingMultiplier at the end
-Balance.MeterCycleSeconds = 0.75 -- time for the needle to go from one side to the other
-Balance.PerfectWindow = 0.04 -- about 60 ms at this speed
-Balance.GreatWindow = 0.1
+Balance.MeterCycleSeconds = 0.9 -- time for the needle to go from one side to the other
+Balance.PerfectWindow = 0.05 -- about 90 ms at this speed
+Balance.GreatWindow = 0.13
 Balance.PerfectMultiplier = 1.3
-Balance.MissMultiplier = 0.8
-Balance.WorstTimingMultiplier = 0.35 -- stopping at the very edge of the meter
+Balance.MissMultiplier = 0.85
+Balance.WorstTimingMultiplier = 0.45 -- stopping at the very edge of the meter
 -- Perfect streak: each Perfect in a row adds this much (on top of PerfectMultiplier), up to the cap.
 Balance.PerfectStreakBonus = 0.05
 Balance.PerfectStreakMax = 5 -- so the 6th Perfect in a row and beyond = 1.3 * 1.25
@@ -77,7 +84,7 @@ Balance.ThiefRespawnSeconds = 40
 Balance.Studio = {
 	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
-	GiftTimeScale = 0.1, -- playtime gifts unlock 10x sooner while testing
+	GiftTimeScale = 1, -- set to 0.1 to make playtime gifts unlock 10x sooner while testing
 }
 
 function Balance.GiftTimeScale(): number
