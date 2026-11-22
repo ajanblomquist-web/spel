@@ -9,6 +9,13 @@ local Balance = {}
 -- Movement
 Balance.WalkSpeed = 24
 Balance.CarrySpeedMultiplier = 0.75 -- carrying an egg makes you slower
+-- Field speed: the further out into the fling field you are, the faster you walk,
+-- so fetching far eggs doesn't get tedious. Ramps from 1x at FieldSpeedStart studs
+-- past the launch pad up to FieldSpeedMax at FieldSpeedFullAt studs and beyond.
+-- Stacks with Speedy Boots and the carry slowdown. No effect in the hub.
+Balance.FieldSpeedStart = 40
+Balance.FieldSpeedFullAt = 600
+Balance.FieldSpeedMax = 2.25
 
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)

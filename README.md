@@ -101,6 +101,7 @@ Now press **Play**.
 **First 30 minutes: burst, slow climb, breakthrough**
 - **Quest chain** of 21 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
 - **Egg Thief** NPC walking around the hub with an egg anyone can steal: teaches stealing and works in solo servers (counts for quests, not the Steals leaderboard)
+- **Field speed**: you walk faster the further out into the fling field you are (up to 2.25x at 600 studs), so fetching far eggs stays quick
 - **Playtime gifts** at 3, 8, 15, 25, 40 and 60 minutes (coins, 2x boosts, a Rare and an Epic egg)
 - The **Shop button bounces with a "!"** when you can afford your next upgrade
 - **Timed boosts** (2x Luck, Coins, Strength) with timers on the left
@@ -163,7 +164,7 @@ src/
       DataService         load / save / leaderboard
       MonetizationService game pass ownership
       MapService          builds the greybox world and the 8 plots
-      MovementService     walk speed (carrying, Speedy Boots)
+      MovementService     walk speed (carrying, Speedy Boots, field speed)
       NestService         incubators, hatching, pedestals, selling, nest stealing, nest lock
       IncomeService       coins per second and offline income
       TrainingService     Strength reps
