@@ -26,6 +26,9 @@ ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4)]  # (end distance, luck)
 RARITIES = [(60, 0, 30, 1.1), (25, 0.5, 60, 3.3), (10, 1, 120, 8.5), (4, 1.25, 300, 27),
             (0.9, 1.5, 600, 95), (0.09, 1.75, 1200, 360), (0.01, 2, 1800, 1500)]
 # Approximate quest/gift coin rewards: (minute, coins)
+# Rebirth (Config/Rebirth): price grows x3, bonuses per rebirth
+REBIRTH_PRICE, REBIRTH_GROWTH = 1000000, 3
+REBIRTH_STR, REBIRTH_COINS, REBIRTH_LUCK = 0.5, 0.25, 0.1
 BONUSES = [(2, 175), (4, 250), (6, 550), (10, 1000), (14, 600), (15, 1000), (18, 2500), (22, 5000)]
 
 
@@ -36,11 +39,12 @@ def run(seed, minutes=45):
     rock = shovel = 0
     dinos, incubating, log, reached, bonuses = [], [], [], set(), list(BONUSES)
     first = True
+    rebirths = 0
 
     def advance(seconds):
         nonlocal t, coins
         for _ in range(int(seconds)):
-            coins += sum(sorted(dinos, reverse=True)[:PEDESTALS])
+            coins += sum(sorted(dinos, reverse=True)[:PEDESTALS]) * (1 + rebirths * REBIRTH_COINS)
             for egg in incubating[:]:
                 egg[1] -= 1
                 if egg[1] <= 0:
@@ -49,14 +53,14 @@ def run(seed, minutes=45):
             t += 1
 
     while t < minutes * 60:
-        strength += TRAIN_SECONDS * TAPS_PER_SECOND * ROCKS[rock][1]
+        strength += TRAIN_SECONDS * TAPS_PER_SECOND * ROCKS[rock][1] * (1 + rebirths * REBIRTH_STR)
         advance(TRAIN_SECONDS + 6)
         distance = min((BASE_DISTANCE + STRENGTH_SCALE * math.sqrt(strength)) * SHOVELS[shovel][1], ZONES[-1][0] - 6)
         zone = next(i for i, z in enumerate(ZONES) if distance < z[0])
         if zone not in reached:
             reached.add(zone)
             log.append((t / 60, f"zone {zone + 1}"))
-        luck = ZONES[zone][1] * SHOVELS[shovel][2]
+        luck = ZONES[zone][1] * SHOVELS[shovel][2] * (1 + rebirths * REBIRTH_LUCK)
         if first:
             rarity, hatch, first = 2, 8, False
         else:
@@ -69,6 +73,13 @@ def run(seed, minutes=45):
         incubating.append([rarity, hatch])
         while bonuses and bonuses[0][0] <= t / 60:
             coins += bonuses.pop(0)[1]
+        # Rebirth as soon as Amber Cliffs is reached and it's affordable.
+        price = REBIRTH_PRICE * REBIRTH_GROWTH ** rebirths
+        if 3 in reached and coins >= price:
+            rebirths += 1
+            coins = strength = 0
+            rock = shovel = 0
+            log.append((t / 60, f"rebirth {rebirths}"))
         bought = True
         while bought:
             bought = False
@@ -88,7 +99,7 @@ def run(seed, minutes=45):
 if __name__ == "__main__":
     rows = {}
     for seed in range(30):
-        for minute, event in run(seed):
+        for minute, event in run(seed, minutes=int(__import__("sys").argv[1]) if len(__import__("sys").argv) > 1 else 45):
             rows.setdefault(event, []).append(minute)
     for event, minutes in sorted(rows.items(), key=lambda kv: statistics.median(kv[1])):
         print(f"{event:10s} median {statistics.median(minutes):5.1f} min  ({len(minutes)}/30 runs)")
