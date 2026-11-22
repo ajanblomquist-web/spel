@@ -116,6 +116,9 @@ Now press **Play**.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
 - Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
 - To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
+- **Bonk weapons**: when an egg carrier is in reach, a red **BONK!** button shows. A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
+- **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
+- **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
@@ -137,6 +140,10 @@ All passes speed up the loop; none sell random rolls (so no odds-disclosure rule
 | Speedy Boots | +25% walk speed | 149 |
 | Fortress Gate | Nest lock lasts 3 min | 149 |
 | VIP | +10% coins | 449 |
+| Amber Hammer (Shop) | Bonk weapon, same as the Raptor Claw | 149 |
+| Meteor Bat (Shop) | Bonk weapon, same as the Raptor Claw | 249 |
+| Golden / Lava / Crystal skin (Shop) | Weapon look only | 99 |
+| Rainbow skin (Shop) | Weapon look only | 149 |
 
 ## Developer products
 
@@ -166,6 +173,7 @@ src/
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
       Index.luau          Dino Index variants, page rewards, Baby odds
+      Weapons.luau        bonk weapons and skins
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -185,6 +193,7 @@ src/
       QuestService        tutorial and quest chain
       IndexService        Dino Index, page rewards, Baby roll
       LeaderboardService  global and weekly leaderboard boards
+      WeaponService       bonk weapons, skins, buying, the bonk
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
@@ -201,6 +210,7 @@ src/
       RevealController    hatch reveal, BREAKTHROUGH, banners, Starter Pack offer
       QuestController     quest card, gift button, boost timers
       IndexController     Dino Index button and panel
+      WeaponController    BONK! button, hit effects, weapon rows in the Shop
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

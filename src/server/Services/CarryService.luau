@@ -5,12 +5,16 @@
 -- -> the egg is rolled and sits above your head -> walk home (slower while
 -- carrying) -> other players can hold "Steal egg" near you -> reach your plot
 -- and the egg goes into a free incubator.
+--
+-- Bonks (WeaponService) knock the egg out of a carrier's hands: it lies on the
+-- ground and anyone can grab it. If nobody does, it goes back to its carrier.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
+local Weapons = require(ReplicatedStorage.Shared.Config.Weapons)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local EggRoll = require(script.Parent.Parent.EggRoll)
@@ -56,6 +60,7 @@ function CarryService.StopCarry(player: Player)
 	carry.Prompt:Destroy()
 	player:SetAttribute("Carrying", nil)
 	player:SetAttribute("CarryRarity", nil)
+	player:SetAttribute("CarryProtectedUntil", nil)
 end
 
 local trySteal -- defined below
@@ -107,7 +112,97 @@ function CarryService.StartCarry(player: Player, egg, protectSeconds: number): b
 		ProtectedUntil = os.clock() + protectSeconds,
 	}
 	player:SetAttribute("CarryRarity", egg.Rarity)
+	player:SetAttribute("CarryProtectedUntil", Workspace:GetServerTimeNow() + protectSeconds)
 	player:SetAttribute("Carrying", true)
+	return true
+end
+
+-- Can this carrier be bonked right now? (Not protected, not safe at home.)
+function CarryService.CanBonk(victim: Player): boolean
+	local carry = carrying[victim]
+	local root = rootOf(victim)
+	if not carry or not root or os.clock() < carry.ProtectedUntil then
+		return false
+	end
+	return not MapService.IsHome(victim, root.Position)
+end
+
+local function grabDropped(grabber: Player, owner: Player, egg, part: BasePart)
+	if not part.Parent or not DataService.IsLoaded(grabber) then
+		return
+	end
+	if carrying[grabber] then
+		Notify.Player(grabber, "Your hands are full! Take your egg home first.", "bad")
+		return
+	end
+	local root = rootOf(grabber)
+	if not root or (root.Position - part.Position).Magnitude > 14 then
+		return
+	end
+	part:Destroy()
+	if not CarryService.StartCarry(grabber, egg, Weapons.GrabProtectSeconds) then
+		return
+	end
+	if grabber == owner then
+		Notify.Player(grabber, "You got your egg back! Run!", "good")
+		return
+	end
+	DataService.Increment(grabber, "Steals", 1)
+	Events.Fire("Steal", grabber, egg, false)
+	Notify.Player(grabber, "You grabbed a " .. egg.Rarity .. " egg! Run home!", "good")
+	if owner.Parent == Players then
+		Notify.Player(owner, grabber.DisplayName .. " grabbed your egg! Chase them!", "bad")
+	end
+end
+
+-- Knocks the egg out of a carrier's hands onto the ground. Returns true if it dropped.
+function CarryService.DropFromBonk(victim: Player): boolean
+	local carry = carrying[victim]
+	local root = rootOf(victim)
+	if not carry or not root then
+		return false
+	end
+	local egg = carry.Egg
+	CarryService.StopCarry(victim)
+
+	local part = Visuals.Egg(egg)
+	part.Anchored = true
+	part.CanCollide = false
+	part.CFrame = CFrame.new(root.Position.X, part.Size.Y / 2 + 0.2, root.Position.Z)
+	local rarity = Eggs.RarityById[egg.Rarity]
+	Visuals.Billboard(part, {
+		{ Text = string.upper(egg.Rarity) .. " EGG", Color = rarity.Color },
+		{ Text = "GRAB IT!", Color = Color3.fromRGB(255, 230, 90) },
+	}, Vector2.new(6, 2.4), 3, 150)
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "GrabPrompt"
+	prompt.ActionText = "Grab egg"
+	prompt.ObjectText = egg.Rarity .. " egg"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Triggered:Connect(function(grabber)
+		grabDropped(grabber, victim, egg, part)
+	end)
+	prompt.Parent = part
+	part.Parent = Workspace:WaitForChild("DigSpots")
+
+	-- Nobody grabbed it: it goes back to its carrier (or straight to their nest).
+	task.delay(Weapons.DropSeconds, function()
+		if not part.Parent then
+			return
+		end
+		part:Destroy()
+		if victim.Parent ~= Players or not DataService.IsLoaded(victim) then
+			return
+		end
+		if not carrying[victim] and CarryService.StartCarry(victim, egg, Weapons.GrabProtectSeconds) then
+			Notify.Player(victim, "Nobody grabbed your egg, so it came back to you!", "good")
+		elseif NestService.TryAddEgg(victim, egg) then
+			Notify.Player(victim, "Your dropped egg was sent to your nest.", "good")
+		end
+	end)
 	return true
 end
 

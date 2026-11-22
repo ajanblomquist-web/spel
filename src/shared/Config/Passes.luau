@@ -13,6 +13,7 @@ export type Pass = {
 	GamePassId: number,
 	Price: number, -- display only; the real price is set in Creator Hub
 	Order: number,
+	Shop: string?, -- "Weapon" or "Skin": shown in the Shop's weapon section, not the Passes menu
 }
 
 local Passes: { [string]: Pass } = {
@@ -96,6 +97,62 @@ local Passes: { [string]: Pass } = {
 		Price = 449,
 		Order = 10,
 	},
+
+	-- Weapons and skins (see Config/Weapons). Shown in the Shop, not the Passes menu.
+	AmberHammer = {
+		Key = "AmberHammer",
+		Name = "Amber Hammer",
+		Description = "Bonk weapon: as strong as the Raptor Claw, no grinding needed.",
+		GamePassId = 0,
+		Price = 149,
+		Order = 101,
+		Shop = "Weapon",
+	},
+	MeteorBat = {
+		Key = "MeteorBat",
+		Name = "Meteor Bat",
+		Description = "Bonk weapon: as strong as the Raptor Claw, glows purple.",
+		GamePassId = 0,
+		Price = 249,
+		Order = 102,
+		Shop = "Weapon",
+	},
+	SkinGolden = {
+		Key = "SkinGolden",
+		Name = "Golden skin",
+		Description = "Makes any weapon gold. Looks only.",
+		GamePassId = 0,
+		Price = 99,
+		Order = 111,
+		Shop = "Skin",
+	},
+	SkinLava = {
+		Key = "SkinLava",
+		Name = "Lava skin",
+		Description = "Makes any weapon glow like lava. Looks only.",
+		GamePassId = 0,
+		Price = 99,
+		Order = 112,
+		Shop = "Skin",
+	},
+	SkinCrystal = {
+		Key = "SkinCrystal",
+		Name = "Crystal skin",
+		Description = "Makes any weapon crystal. Looks only.",
+		GamePassId = 0,
+		Price = 99,
+		Order = 113,
+		Shop = "Skin",
+	},
+	SkinRainbow = {
+		Key = "SkinRainbow",
+		Name = "Rainbow skin",
+		Description = "Makes any weapon shimmer. Looks only.",
+		GamePassId = 0,
+		Price = 149,
+		Order = 114,
+		Shop = "Skin",
+	},
 }
 
 -- Effects, read by the services. Keep numbers here so they're easy to tune.
@@ -114,10 +171,13 @@ local Module = {}
 Module.ByKey = Passes
 Module.Effects = Effects
 
+-- Passes for the Passes menu (weapons and skins are listed in the Shop instead).
 function Module.Sorted(): { Pass }
 	local list = {}
 	for _, pass in Passes do
-		table.insert(list, pass)
+		if not pass.Shop then
+			table.insert(list, pass)
+		end
 	end
 	table.sort(list, function(a, b)
 		return a.Order < b.Order

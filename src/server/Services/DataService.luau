@@ -54,6 +54,7 @@ local function defaultData()
 		Index = {}, -- Dino Index: { [dinoId] = { [variantId] = true } }
 		IndexPages = {}, -- { [rarityId] = true }, Index pages whose reward was paid
 		Weekly = { Week = 0, Steals = 0, EggsDug = 0 }, -- weekly leaderboard counters
+		Weapons = { Owned = {}, Equipped = "Stick" }, -- bonk weapons (+ Skin = skinId)
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,

@@ -17,6 +17,11 @@
 --   ClaimGift      client -> server   claim a playtime gift (index)
 --   StudioBuyProduct client -> server Studio only: grant a developer product for testing
 --   IndexSync      server -> client   (index, pagesDone) the player's whole Dino Index
+--   BuyWeapon      client -> server   (weaponId) buy a coin weapon
+--   EquipWeapon    client -> server   (weaponId)
+--   EquipSkin      client -> server   (skinId or nil)
+--   Bonk           client -> server   (victim) bonk an egg carrier
+--                  server -> all      (attacker, victim, direction) play the hit
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -36,6 +41,10 @@ local NAMES = {
 	"ClaimGift",
 	"StudioBuyProduct",
 	"IndexSync",
+	"BuyWeapon",
+	"EquipWeapon",
+	"EquipSkin",
+	"Bonk",
 }
 
 local FOLDER_NAME = "Remotes"

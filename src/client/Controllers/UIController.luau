@@ -854,6 +854,12 @@ function UIController.BuildPanel(name: string, title: string): (Frame, Scrolling
 	return panel, list
 end
 
+-- The Shop's scrolling list and its row builder, so other controllers can add sections.
+function UIController.ShopList(): ScrollingFrame
+	return shopPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame
+end
+UIController.Row = row
+
 -- Opens one panel and closes the others (or closes it if it was open).
 function UIController.TogglePanel(panel: Frame)
 	local open = not panel.Visible
