@@ -13,14 +13,25 @@ Design doc: https://claude.ai/artifact/YDRaLZfJ13HRfQKPsLRWJC
 You need: **Roblox Studio**, **VS Code**, and **Rojo** (it copies the code from this folder into Studio while you work).
 
 1. **Get the code.** Clone this repo, or on GitHub press *Code > Download ZIP* and unzip it.
-2. **Install Rokit** (installs Rojo and the other tools at the right versions). Follow https://github.com/rojo-rbx/rokit#installation, then open a terminal in this folder and run:
+2. **Install Rojo.** Pick one way:
+
+   **Easiest: the VS Code extension (no terminal needed).** In VS Code, open the Extensions tab, install **Rojo** (by evaera), open this folder with *File > Open Folder*, then press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows), type `Rojo: Open menu` and pick **Start server**. It installs Rojo by itself, and its menu can install the Studio plugin too. Then skip to step 4.
+
+   **Or with the terminal (Rokit).** On a Mac, open Terminal and paste:
    ```
+   curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
+   ```
+   **Then quit Terminal completely (Cmd+Q) and open it again.** Rokit adds itself to your PATH, but only new Terminal windows see it. That's the usual cause of `command not found`. Check it worked with `rokit --version`. Now go to this folder and install the tools listed in `rokit.toml`:
+   ```
+   cd path/to/spel
    rokit install
    ```
-   (No Rokit? You can instead install the **Rojo** VS Code extension, which installs Rojo for you.)
+   Answer **yes** if it asks whether to trust the tools. Check with `rojo --version` (it should say 7.4.4). On Windows, download the installer from https://github.com/rojo-rbx/rokit/releases instead, and restart the terminal after it finishes.
+
+   `rojo` only works inside this folder (where `rokit.toml` is). If you see `command not found: rojo`, run `pwd` to check you're in the spel folder.
 3. **Install the Rojo plugin in Studio.** Run `rojo plugin install` in the terminal, or get "Rojo" from the Creator Store plugins. Restart Studio.
 4. **Make a place.** In Studio: *New > Baseplate*. Delete the `Baseplate` part and the default `SpawnLocation` from Workspace (the game builds its own).
-5. **Start syncing.** In the terminal in this folder:
+5. **Start syncing.** With the VS Code extension, *Start server* already did this. With the terminal, run this in the spel folder:
    ```
    rojo serve
    ```
