@@ -1,5 +1,9 @@
 -- TrainingService.luau
 -- Each rep at the training rock adds Strength. More Strength = longer flings.
+--
+-- Free AFK: standing at the rock trains you by itself at half speed (every
+-- Balance.FreeAutoTrainSeconds). Tapping TRAIN is full speed. The Auto Train
+-- pass trains at full speed from anywhere.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -31,30 +35,48 @@ function TrainingService.Init(Services)
 	BoostService = Services.BoostService
 end
 
+local function doRep(player: Player)
+	local data = DataService.Get(player)
+	if not data then
+		return
+	end
+	lastRep[player] = os.clock()
+	local rock = Shop.Rocks[data.RockTier] or Shop.Rocks[1]
+	local gain = rock.StrengthPerRep
+	if MonetizationService.Has(player, "DoubleStrength") then
+		gain *= Passes.Effects.StrengthMultiplier
+	end
+	gain *= BoostService.Multiplier(player, "Strength")
+	DataService.Increment(player, "Strength", gain)
+	Events.Fire("TrainRep", player, gain)
+end
+
 function TrainingService.Start()
-	Remotes.Get("Train").OnServerEvent:Connect(function(player)
-		local data = DataService.Get(player)
-		if not data then
-			return
-		end
+	Remotes.Get("Train").OnServerEvent:Connect(function(player, options)
 		local now = os.clock()
 		-- 0.85 allows for network jitter between taps.
 		if lastRep[player] and now - lastRep[player] < Balance.TrainCooldown * 0.85 then
 			return
 		end
-		if not isNearRock(player) then
-			return
+		local auto = type(options) == "table" and options.auto == true
+		local allowed = isNearRock(player) or (auto and MonetizationService.Has(player, "AutoTrain"))
+		if allowed then
+			doRep(player)
 		end
-		lastRep[player] = now
+	end)
 
-		local rock = Shop.Rocks[data.RockTier] or Shop.Rocks[1]
-		local gain = rock.StrengthPerRep
-		if MonetizationService.Has(player, "DoubleStrength") then
-			gain *= Passes.Effects.StrengthMultiplier
+	-- Free AFK training at the rock.
+	task.spawn(function()
+		while true do
+			task.wait(0.1)
+			local now = os.clock()
+			for _, player in DataService.LoadedPlayers() do
+				local last = lastRep[player] or 0
+				if now - last >= Balance.FreeAutoTrainSeconds and isNearRock(player) then
+					doRep(player)
+				end
+			end
 		end
-		gain *= BoostService.Multiplier(player, "Strength")
-		DataService.Increment(player, "Strength", gain)
-		Events.Fire("TrainRep", player, gain)
 	end)
 
 	game:GetService("Players").PlayerRemoving:Connect(function(player)

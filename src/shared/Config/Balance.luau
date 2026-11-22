@@ -20,6 +20,10 @@ Balance.FieldSpeedMax = 2.25
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)
 Balance.TrainRange = 14 -- studs from the training rock
+-- Free AFK training: standing at the rock trains you by itself every this many
+-- seconds (half the speed of tapping). The Auto Train pass trains at full speed
+-- from anywhere.
+Balance.FreeAutoTrainSeconds = 0.6
 
 -- Fling
 Balance.FlingRange = 14 -- studs from the launch pad

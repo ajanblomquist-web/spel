@@ -118,6 +118,7 @@ Now press **Play**.
 - To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
 - **Bonk weapons**: when an egg carrier is in reach, a red **BONK!** button shows. A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
 - **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
+- **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
 - **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
@@ -132,7 +133,7 @@ All passes speed up the loop; none sell random rolls (so no odds-disclosure rule
 |---|---|---|
 | 2x Coins | Doubles dino income | 399 |
 | 2x Strength | Doubles Strength per rep | 199 |
-| Auto Train | Trains by itself at the rock | 249 |
+| Auto Train | Trains at full speed by itself, anywhere (the rock alone trains free at half speed) | 249 |
 | Auto Fling | Flings for you at the pad and a dino drone brings each egg straight to your nest (while an incubator is free) | 349 |
 | Lucky Shovel | +50% luck | 299 |
 | Fast Incubator | Eggs hatch 2x faster | 249 |

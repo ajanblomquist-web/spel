@@ -1,5 +1,7 @@
 -- TrainingController.luau
 -- TRAIN button near the rock, plus Auto Train for pass owners.
+-- Standing at the rock also trains you for free at half speed (the server does
+-- it); this shows a floater for those reps too.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -7,9 +9,7 @@ local Workspace = game:GetService("Workspace")
 
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
-local Passes = require(ReplicatedStorage.Shared.Config.Passes)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local Shop = require(ReplicatedStorage.Shared.Config.Shop)
 
 local player = Players.LocalPlayer
 
@@ -26,20 +26,13 @@ local function nearRock(): boolean
 	return rock ~= nil and root ~= nil and (root.Position - rock.Position).Magnitude <= Balance.TrainRange + 4
 end
 
-local function rep()
+local function rep(auto: boolean?)
 	local now = os.clock()
 	if now - lastRep < Balance.TrainCooldown then
 		return
 	end
 	lastRep = now
-	Remotes.Get("Train"):FireServer()
-
-	local rock = Shop.Rocks[player:GetAttribute("RockTier") or 1] or Shop.Rocks[1]
-	local gain = rock.StrengthPerRep
-	if UIController.OwnsPass("DoubleStrength") then
-		gain *= Passes.Effects.StrengthMultiplier
-	end
-	UIController.Floater("+" .. FormatNumber(gain) .. " Str")
+	Remotes.Get("Train"):FireServer(if auto then { auto = true } else nil)
 end
 
 function TrainingController.Start(Controllers)
@@ -49,15 +42,34 @@ function TrainingController.Start(Controllers)
 		if not nearRock() then
 			return nil
 		end
-		return { Text = "TRAIN", Color = Color3.fromRGB(255, 120, 80), Callback = rep }
+		local idle = os.clock() - lastRep > 1
+		return {
+			Text = if idle then "AUTO TRAINING\nTap for 2x!" else "TRAIN",
+			Color = Color3.fromRGB(255, 120, 80),
+			Callback = function()
+				rep(false)
+			end,
+		}
 	end)
 
+	-- Auto Train pass: full speed, anywhere.
 	task.spawn(function()
 		while true do
 			task.wait(Balance.TrainCooldown + 0.02)
-			if UIController.AutoState.AutoTrain and UIController.OwnsPass("AutoTrain") and nearRock() then
-				rep()
+			if UIController.AutoState.AutoTrain and UIController.OwnsPass("AutoTrain") then
+				rep(true)
 			end
+		end
+	end)
+
+	-- A "+Str" floater for every rep (tapped, auto or free AFK).
+	local lastStrength = player:GetAttribute("Strength") or 0
+	player:GetAttributeChangedSignal("Strength"):Connect(function()
+		local strength = player:GetAttribute("Strength") or 0
+		local gain = strength - lastStrength
+		lastStrength = strength
+		if gain > 0 then
+			UIController.Floater("+" .. FormatNumber(gain) .. " Str")
 		end
 	end)
 end
