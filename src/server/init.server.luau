@@ -20,6 +20,7 @@ local ORDER = {
 	"ShopService",
 	"QuestService",
 	"IndexService",
+	"LeaderboardService",
 	"GiftService",
 	"StarterPackService",
 	"NpcService",

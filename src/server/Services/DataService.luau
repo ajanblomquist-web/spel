@@ -53,6 +53,7 @@ local function defaultData()
 		StarterOfferShown = false,
 		Index = {}, -- Dino Index: { [dinoId] = { [variantId] = true } }
 		IndexPages = {}, -- { [rarityId] = true }, Index pages whose reward was paid
+		Weekly = { Week = 0, Steals = 0, EggsDug = 0 }, -- weekly leaderboard counters
 		Stats = {
 			Flings = 0,
 			BestDistance = 0,

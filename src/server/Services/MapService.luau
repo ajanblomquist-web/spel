@@ -401,6 +401,11 @@ function MapService.Init(Services)
 	end)
 end
 
+-- The Workspace folder that holds the world (for other services' props).
+function MapService.Folder(): Folder
+	return mapFolder
+end
+
 function MapService.Start()
 	local function onPlayer(player: Player)
 		player.CharacterAdded:Connect(function(character)

@@ -116,6 +116,7 @@ Now press **Play**.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
 - Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
 - To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
+- **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
 
@@ -183,6 +184,7 @@ src/
       ShopService         buying upgrades, breakthrough celebration
       QuestService        tutorial and quest chain
       IndexService        Dino Index, page rewards, Baby roll
+      LeaderboardService  global and weekly leaderboard boards
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
