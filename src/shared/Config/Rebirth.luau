@@ -6,7 +6,7 @@
 local Rebirth = {}
 
 Rebirth.RequiredZone = "AmberCliffs"
-Rebirth.BasePrice = 500000
+Rebirth.BasePrice = 1000000
 Rebirth.PriceGrowth = 3 -- each rebirth costs 3x the last
 
 -- Permanent bonuses per rebirth (added up: 2 rebirths = +100% Strength).
