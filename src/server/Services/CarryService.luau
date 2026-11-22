@@ -150,6 +150,20 @@ trySteal = function(thief: Player, victim: Player)
 	Notify.Player(thief, "You stole a " .. egg.Rarity .. " egg! Run home!", "good")
 end
 
+-- Rolls a dug egg. Every new player's first egg is a guaranteed Rare that hatches fast.
+function CarryService.RollEgg(player: Player, luck: number, zoneId: string)
+	local egg = EggRoll.Roll(luck, zoneId)
+	local data = DataService.Get(player)
+	if data and not data.FirstEggDone then
+		data.FirstEggDone = true
+		if Eggs.RarityById[egg.Rarity].Order < Eggs.RarityById[Balance.FirstEggRarity].Order then
+			egg.Rarity = Balance.FirstEggRarity
+		end
+		egg.Fast = true
+	end
+	return egg
+end
+
 local function dig(player: Player)
 	local spot = digSpots[player]
 	if not spot then
@@ -163,16 +177,8 @@ local function dig(player: Player)
 	if not root or (root.Position - spot.Part.Position).Magnitude > 16 then
 		return
 	end
-	local egg = EggRoll.Roll(spot.Luck, spot.ZoneId)
+	local egg = CarryService.RollEgg(player, spot.Luck, spot.ZoneId)
 	local data = DataService.Get(player)
-	if not data.FirstEggDone then
-		-- Every new player's first egg is a guaranteed Rare that hatches fast.
-		data.FirstEggDone = true
-		if Eggs.RarityById[egg.Rarity].Order < Eggs.RarityById[Balance.FirstEggRarity].Order then
-			egg.Rarity = Balance.FirstEggRarity
-		end
-		egg.Fast = true
-	end
 	CarryService.ClearDigSpot(player)
 	-- The first egg can't be stolen on the way home: a new player's first loop should feel good.
 	local protect = if egg.Fast then 120 else 0

@@ -15,10 +15,11 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Shop = require(ReplicatedStorage.Shared.Config.Shop)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local Events = require(script.Parent.Parent.Events)
+local Notify = require(script.Parent.Parent.Notify)
 
 local FlingService = {}
 
-local DataService, MapService, MonetizationService, CarryService, BoostService
+local DataService, MapService, MonetizationService, CarryService, BoostService, NestService
 
 local sessions: { [Player]: number } = {} -- player -> os.clock() when the meter started
 local lastFling: { [Player]: number } = {}
@@ -53,7 +54,25 @@ function FlingService.Distance(strength: number, shovelPower: number, timingMult
 	return math.clamp(raw, 8, Zones.MaxDistance - 6)
 end
 
-local function resolve(player: Player, meterValue: number)
+-- Auto Fling's dino drone: digs the egg and flies it straight into a free
+-- incubator. Returns false (so a normal dig spot is made) if the nest is full.
+local function droneDelivery(player: Player, luck: number, zoneId: string): boolean
+	local data = DataService.Get(player)
+	if not data or #data.Incubating >= Balance.IncubatorSlots then
+		return false
+	end
+	local egg = CarryService.RollEgg(player, luck, zoneId)
+	if not NestService.TryAddEgg(player, egg) then
+		return false
+	end
+	data.Stats.EggsDug += 1
+	Events.Fire("Dig", player, egg)
+	Events.Fire("Deliver", player, egg)
+	Notify.Player(player, "Your dino drone brought home a " .. string.upper(egg.Rarity) .. " egg!", "good")
+	return true
+end
+
+local function resolve(player: Player, meterValue: number, auto: boolean?)
 	local data = DataService.Get(player)
 	if not data then
 		return
@@ -112,7 +131,13 @@ local function resolve(player: Player, meterValue: number)
 
 	local zoneId = zone.Id
 	task.delay(Balance.FlightSeconds, function()
-		if player.Parent == Players and not CarryService.IsCarrying(player) then
+		if player.Parent ~= Players then
+			return
+		end
+		if auto and MonetizationService.Has(player, "AutoFling") and droneDelivery(player, luck, zoneId) then
+			return
+		end
+		if not CarryService.IsCarrying(player) then
 			CarryService.CreateDigSpot(player, landing, zoneId, luck)
 		end
 	end)
@@ -124,6 +149,7 @@ function FlingService.Init(Services)
 	MonetizationService = Services.MonetizationService
 	CarryService = Services.CarryService
 	BoostService = Services.BoostService
+	NestService = Services.NestService
 end
 
 function FlingService.Start()
@@ -134,7 +160,7 @@ function FlingService.Start()
 		if type(options) == "table" and options.auto == true then
 			if MonetizationService.Has(player, "AutoFling") then
 				sessions[player] = nil
-				resolve(player, Balance.AutoFlingTiming)
+				resolve(player, Balance.AutoFlingTiming, true)
 			end
 			return
 		end

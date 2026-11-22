@@ -130,7 +130,7 @@ All passes speed up the loop; none sell random rolls (so no odds-disclosure rule
 | 2x Coins | Doubles dino income | 399 |
 | 2x Strength | Doubles Strength per rep | 199 |
 | Auto Train | Trains by itself at the rock | 249 |
-| Auto Fling | Flings by itself with a good hit at the pad | 349 |
+| Auto Fling | Flings for you at the pad and a dino drone brings each egg straight to your nest (while an incubator is free) | 349 |
 | Lucky Shovel | +50% luck | 299 |
 | Fast Incubator | Eggs hatch 2x faster | 249 |
 | Extra Pedestals | +6 pedestals | 199 |
