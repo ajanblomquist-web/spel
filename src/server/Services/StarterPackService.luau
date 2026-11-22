@@ -13,7 +13,8 @@ local StarterPackService = {}
 
 local DataService, BoostService, NestService
 
-local OFFER_DELAY = 7 -- seconds after the first hatch, so the reveal plays first
+local OFFER_DELAY = 7 -- seconds after the hatch, so the reveal plays first
+local OFFER_AFTER_HATCHES = 3
 
 function StarterPackService.Init(Services)
 	DataService = Services.DataService
@@ -43,7 +44,12 @@ function StarterPackService.Init(Services)
 
 	Events.On("Hatch", function(player)
 		local data = DataService.Get(player)
+		-- Offered after the 3rd hatch, not the first, so it never lands on top of
+		-- the first-egg reveal and the tutorial.
 		if not data or data.StarterOfferShown or data.StarterPackBought then
+			return
+		end
+		if data.Stats.DinosHatched < OFFER_AFTER_HATCHES then
 			return
 		end
 		data.StarterOfferShown = true

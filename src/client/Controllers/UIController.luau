@@ -660,7 +660,9 @@ local function nextAffordable(): boolean
 end
 
 local function refreshShopAttention()
-	local want = nextAffordable() or player:GetAttribute("QuestGuide") == "Shop"
+	-- During the tutorial only the quest decides, so the Shop doesn't compete with the guide line.
+	local guided = player:GetAttribute("QuestGuide") == "Shop"
+	local want = guided or (not player:GetAttribute("QuestTutorial") and nextAffordable())
 	if want == shopAttention then
 		return
 	end
