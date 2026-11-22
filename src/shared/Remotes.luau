@@ -1,0 +1,58 @@
+-- Remotes.luau
+-- One place that lists every RemoteEvent. The server creates them on start;
+-- the client waits for them. Use Remotes.Get("Name") on either side.
+--
+-- Direction notes:
+--   Train          client -> server   do one training rep
+--   StartFling     client -> server   start the timing meter ({ auto = true } for Auto Fling)
+--   StopFling      client -> server   meter value 0..1 where the player tapped
+--   FlingResult    server -> all      a shovel flight to animate
+--   BuyUpgrade     client -> server   ("Rocks" | "Shovels", tier)
+--   LockNest       client -> server   lock your incubators against thieves
+--   Notify         server -> client   toast message (text, kind)
+--   OfflineEarned  server -> client   (coins, seconds) welcome-back popup
+--   StudioSetPass  client -> server   Studio only: toggle a pass for testing
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local NAMES = {
+	"Train",
+	"StartFling",
+	"StopFling",
+	"FlingResult",
+	"BuyUpgrade",
+	"LockNest",
+	"Notify",
+	"OfflineEarned",
+	"StudioSetPass",
+}
+
+local FOLDER_NAME = "Remotes"
+
+local Remotes = {}
+
+function Remotes.Setup()
+	assert(RunService:IsServer(), "Remotes.Setup is server only")
+	local folder = ReplicatedStorage:FindFirstChild(FOLDER_NAME)
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = FOLDER_NAME
+		folder.Parent = ReplicatedStorage
+	end
+	for _, name in NAMES do
+		if not folder:FindFirstChild(name) then
+			local remote = Instance.new("RemoteEvent")
+			remote.Name = name
+			remote.Parent = folder
+		end
+	end
+end
+
+function Remotes.Get(name: string): RemoteEvent
+	assert(table.find(NAMES, name), "Unknown remote: " .. name)
+	local folder = ReplicatedStorage:WaitForChild(FOLDER_NAME)
+	return folder:WaitForChild(name) :: RemoteEvent
+end
+
+return Remotes

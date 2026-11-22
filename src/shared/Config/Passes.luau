@@ -1,0 +1,132 @@
+-- Passes.luau
+-- Game passes. Create each pass in Creator Hub (your experience > Monetization >
+-- Passes), then paste its ID into GamePassId below. A pass with ID 0 shows as
+-- "Coming soon" in the shop. In Studio you can switch passes on and off from the
+-- Passes menu to test them without buying.
+--
+-- All passes speed up the loop. None sells a random roll.
+
+export type Pass = {
+	Key: string,
+	Name: string,
+	Description: string,
+	GamePassId: number,
+	Price: number, -- display only; the real price is set in Creator Hub
+	Order: number,
+}
+
+local Passes: { [string]: Pass } = {
+	DoubleCoins = {
+		Key = "DoubleCoins",
+		Name = "2x Coins",
+		Description = "Doubles all dino income.",
+		GamePassId = 0,
+		Price = 399,
+		Order = 1,
+	},
+	DoubleStrength = {
+		Key = "DoubleStrength",
+		Name = "2x Strength",
+		Description = "Doubles Strength from every rep.",
+		GamePassId = 0,
+		Price = 199,
+		Order = 2,
+	},
+	AutoTrain = {
+		Key = "AutoTrain",
+		Name = "Auto Train",
+		Description = "Trains by itself while you stand at the rock.",
+		GamePassId = 0,
+		Price = 249,
+		Order = 3,
+	},
+	AutoFling = {
+		Key = "AutoFling",
+		Name = "Auto Fling",
+		Description = "Flings by itself with a good hit while you stand at the pad.",
+		GamePassId = 0,
+		Price = 349,
+		Order = 4,
+	},
+	LuckyShovel = {
+		Key = "LuckyShovel",
+		Name = "Lucky Shovel",
+		Description = "+50% luck on every dig.",
+		GamePassId = 0,
+		Price = 299,
+		Order = 5,
+	},
+	FastIncubator = {
+		Key = "FastIncubator",
+		Name = "Fast Incubator",
+		Description = "Eggs hatch 2x faster.",
+		GamePassId = 0,
+		Price = 249,
+		Order = 6,
+	},
+	ExtraPedestals = {
+		Key = "ExtraPedestals",
+		Name = "Extra Pedestals",
+		Description = "+6 pedestals for more dinos.",
+		GamePassId = 0,
+		Price = 199,
+		Order = 7,
+	},
+	SpeedyBoots = {
+		Key = "SpeedyBoots",
+		Name = "Speedy Boots",
+		Description = "+25% walk speed, also while carrying.",
+		GamePassId = 0,
+		Price = 149,
+		Order = 8,
+	},
+	FortressGate = {
+		Key = "FortressGate",
+		Name = "Fortress Gate",
+		Description = "Your nest lock lasts 3 minutes instead of 1.",
+		GamePassId = 0,
+		Price = 149,
+		Order = 9,
+	},
+	VIP = {
+		Key = "VIP",
+		Name = "VIP",
+		Description = "+10% coins and a VIP tag.",
+		GamePassId = 0,
+		Price = 449,
+		Order = 10,
+	},
+}
+
+-- Effects, read by the services. Keep numbers here so they're easy to tune.
+local Effects = {
+	CoinMultiplier = 2, -- DoubleCoins
+	StrengthMultiplier = 2, -- DoubleStrength
+	LuckMultiplier = 1.5, -- LuckyShovel
+	IncubationSpeed = 2, -- FastIncubator
+	ExtraPedestals = 6, -- ExtraPedestals
+	SpeedMultiplier = 1.25, -- SpeedyBoots
+	VIPCoinMultiplier = 1.1, -- VIP
+	FortressLockSeconds = 180, -- FortressGate
+}
+
+local Module = {}
+Module.ByKey = Passes
+Module.Effects = Effects
+
+function Module.Sorted(): { Pass }
+	local list = {}
+	for _, pass in Passes do
+		table.insert(list, pass)
+	end
+	table.sort(list, function(a, b)
+		return a.Order < b.Order
+	end)
+	return list
+end
+
+function Module.AttributeName(key: string): string
+	return "Pass_" .. key
+end
+
+return Module
