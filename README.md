@@ -130,7 +130,7 @@ Now press **Play**.
 - **Two new zones past Amber Cliffs**, each with 4 dinos you can only get there:
   - **Frozen Tundra** (850-1150m, x6 luck, Toughness 10): Snow Compy, Frost Raptor, Glacier Ankylo, Blizzard Spino. Reached around the first rebirth (~80 min in the simulator).
   - **Volcano Rim** (1150-1450m, x9 luck, Toughness 40): Ember Raptor, Magma Stego, Inferno Spino, Volcano Titan (Mythic). Reached after about 2 rebirths (~4 h); its far edge takes ~9 h.
-  - Walking speed keeps ramping further out (up to 3x at 1000m) so the long walk home stays quick.
+  - Field speed: you run 3.5x speed from 150m out, so fetching eggs is quick and the hub (where thieves and bonkers wait) is the slow, risky part.
 - **Shop sections**: Codes, Rebirth, Training Rocks, Shovels, Weapons, Weapon Skins, Robux Deals (Starter Pack, Rare Egg) and Coin Packs.
 - **Codes**: type a code in the box at the top of the Shop. Each works once per player. Starting codes: `FOSSIL` (2x Luck 15 min), `RELEASE` (10 min of income, at least 1,000 coins), `DINOPOWER` (2x Strength 15 min). Add codes in `Config/Codes.luau` (rewards use the gift format; optional expiry date).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
