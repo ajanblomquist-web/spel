@@ -3,6 +3,9 @@
 -- Dinos with a Zone only hatch from eggs dug in that zone (a reason to reach it).
 -- To use a real model instead of the greybox block, put a Model named after
 -- the dino Id (e.g. "Velociraptor") in ReplicatedStorage > DinoModels.
+-- Models made with tools/blender/dino_maker.py are coloured from Color, plus the
+-- optional Belly and Accent (spikes/plates) colours, and scaled to Height studs
+-- (default 6). Gold, Rainbow and Baby versions come from the same model.
 
 local Dinos = {}
 
@@ -68,7 +71,16 @@ Dinos.List = {
 		Color = Color3.fromRGB(200, 120, 90),
 	},
 	-- Legendary
-	{ Id = "TRex", Name = "T. rex", Rarity = "Legendary", Income = 90, Color = Color3.fromRGB(110, 90, 70) },
+	{
+		Id = "TRex",
+		Name = "T. rex",
+		Rarity = "Legendary",
+		Income = 90,
+		Color = Color3.fromRGB(95, 170, 80),
+		Belly = Color3.fromRGB(240, 230, 170),
+		Accent = Color3.fromRGB(240, 150, 60),
+		Height = 7,
+	},
 	{
 		Id = "Spinosaurus",
 		Name = "Spinosaurus",

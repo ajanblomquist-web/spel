@@ -9,11 +9,14 @@
 -- off with it. The free counter is the nest lock (button shows when you're at
 -- home): 60 s of protection, then a cooldown. Fortress Gate makes it 3 min.
 
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
+local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
@@ -414,8 +417,65 @@ function NestService.Init(Services)
 	end)
 end
 
+-- Studio only: type "/dino TRex" (add gold, rainbow, baby or huge etc. if you like)
+-- to put that dino on your first pedestal, to look at new models.
+local function testDinoCommand(player: Player, message: string)
+	local words = string.split(string.lower(message), " ")
+	if words[1] ~= "/dino" or not words[2] then
+		return
+	end
+	local dino
+	for _, d in Dinos.List do
+		if string.lower(d.Id) == words[2] then
+			dino = d
+		end
+	end
+	local data = DataService.Get(player)
+	if not dino or not data then
+		Notify.Player(player, "Unknown dino. Use its Id, like /dino TRex", "bad")
+		return
+	end
+	local record = {
+		Id = HttpService:GenerateGUID(false),
+		DinoId = dino.Id,
+		Rarity = dino.Rarity,
+		Size = "Normal",
+		Mutation = "None",
+		Zone = dino.Zone,
+		Baby = nil :: boolean?,
+	}
+	for i = 3, #words do
+		for _, size in Eggs.Sizes do
+			if string.lower(size.Id) == words[i] then
+				record.Size = size.Id
+			end
+		end
+		for _, mutation in Eggs.Mutations do
+			if string.lower(mutation.Id) == words[i] then
+				record.Mutation = mutation.Id
+			end
+		end
+		if words[i] == "baby" then
+			record.Baby = true
+		end
+	end
+	table.insert(data.Dinos, 1, record)
+	NestService.RenderPedestals(player)
+end
+
 function NestService.Start()
 	Remotes.Get("LockNest").OnServerEvent:Connect(lockNest)
+	if RunService:IsStudio() then
+		local function onPlayer(player: Player)
+			player.Chatted:Connect(function(message)
+				testDinoCommand(player, message)
+			end)
+		end
+		Players.PlayerAdded:Connect(onPlayer)
+		for _, player in Players:GetPlayers() do
+			onPlayer(player)
+		end
+	end
 	while true do
 		task.wait(1)
 		for _, player in DataService.LoadedPlayers() do
