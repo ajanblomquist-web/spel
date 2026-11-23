@@ -1,7 +1,7 @@
 -- IndexController.luau
 -- The Dino Index button and panel. One section per rarity page, one row per
 -- dino, one box per variant (lit when you've hatched it). Dinos you haven't
--- found yet show as "???". A "NEW" badge shows on the button when you've
+-- found yet show as "???", and the Secret page is hidden until you find one. A "NEW" badge shows on the button when you've
 -- ticked boxes since you last looked.
 
 local Players = game:GetService("Players")
@@ -47,6 +47,29 @@ local function clearList()
 	end
 end
 
+-- The Secret page stays hidden until you've hatched one of its dinos.
+local function pageVisible(page): boolean
+	if page.Rarity ~= "Secret" then
+		return true
+	end
+	for _, dino in page.Dinos do
+		if entries[dino.Id] and entries[dino.Id].Found then
+			return true
+		end
+	end
+	return false
+end
+
+local function visibleTotal(): number
+	local total = 0
+	for _, page in Index.Pages do
+		if pageVisible(page) then
+			total += #page.Dinos * #Index.Variants
+		end
+	end
+	return total
+end
+
 local function header(order: number)
 	local count = Index.Count(entries)
 	local luck = player:GetAttribute("BabyLuck") or 1
@@ -61,7 +84,7 @@ local function header(order: number)
 	UI.Label({
 		Position = UDim2.fromOffset(12, 4),
 		Size = UDim2.new(1, -24, 0, 26),
-		Text = count .. " / " .. Index.TotalEntries .. " boxes found",
+		Text = count .. " / " .. visibleTotal() .. " boxes found",
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 13,
 		Parent = frame,
@@ -182,11 +205,13 @@ local function render()
 	local order = 1
 	header(order)
 	for _, page in Index.Pages do
-		order += 1
-		pageHeader(order, page)
-		for _, dino in page.Dinos do
+		if pageVisible(page) then
 			order += 1
-			dinoRow(order, dino)
+			pageHeader(order, page)
+			for _, dino in page.Dinos do
+				order += 1
+				dinoRow(order, dino)
+			end
 		end
 	end
 end
