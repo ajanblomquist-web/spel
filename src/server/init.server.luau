@@ -24,6 +24,7 @@ local ORDER = {
 	"GiftService",
 	"StarterPackService",
 	"ProductService",
+	"CodeService",
 	"NpcService",
 	"WeaponService",
 	"HintService",

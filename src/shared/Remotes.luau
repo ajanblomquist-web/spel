@@ -26,6 +26,7 @@
 --   GroupCheck     client -> server   re-check group membership after the join prompt
 --   Rebirth        client -> server   rebirth (pay coins, reset, get permanent bonuses)
 --   ClaimDaily     client -> server   claim today's login streak reward
+--   RedeemCode     client -> server   redeem a code from the Shop's Codes box
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -53,6 +54,7 @@ local NAMES = {
 	"GroupCheck",
 	"Rebirth",
 	"ClaimDaily",
+	"RedeemCode",
 }
 
 local FOLDER_NAME = "Remotes"

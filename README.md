@@ -126,6 +126,8 @@ Now press **Play**.
 - **Rebirth** (top row of the Shop, after reaching Amber Cliffs): pay coins (1M, then 3x more each time) to reset coins, Strength, rock and shovel. You keep dinos, Index, eggs, passes and weapons, and get +50% Strength, +25% coins and +10% luck forever per rebirth, a "Rebirth N" tag above your head and a Rebirths column on the player list. Numbers in `Config/Rebirth.luau`.
 - **Daily streak**: a 7-day reward track (coins, boosts, Rare egg, Epic egg on day 7) that pops up once a day after the tutorial. Missing a day starts it over. Rewards in `Config/Daily.luau`.
 - **Server events**: a 10-minute event at the start of every hour, the same on every server: Double Luck, Double Coins, Golden Hour (3x mutations), Baby Boom (5x Baby odds), Strength Surge. A banner announces it and a timer pill shows under the top bar. As the game owner (or anyone in Studio) type `/event DoubleLuck` (optionally `/event BabyBoom 30` for 30 minutes) or `/event stop` in chat; it reaches every server. Events in `Config/WorldEvents.luau`.
+- **Shop sections**: Codes, Rebirth, Training Rocks, Shovels, Weapons, Weapon Skins, Robux Deals (Starter Pack, Rare Egg) and Coin Packs.
+- **Codes**: type a code in the box at the top of the Shop. Each works once per player. Starting codes: `FOSSIL` (2x Luck 15 min), `RELEASE` (10 min of income, at least 1,000 coins), `DINOPOWER` (2x Strength 15 min). Add codes in `Config/Codes.luau` (rewards use the gift format; optional expiry date).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
@@ -162,7 +164,6 @@ Create these in **Creator Hub > Monetization > Developer Products** and paste th
 | Rare Egg (Shop) | One Rare egg (dinos and odds shown on the row). Waits for a free incubator if yours are full | 49 |
 | 5 / 10 / 24 hours of coins (Shop) | That many hours of your current income (at least 2,500 per hour) | 99 / 179 / 349 |
 
-Boost potions, Server Luck and Instant Hatch come in milestone 3.
 
 ---
 
@@ -179,6 +180,7 @@ src/
       Shop.luau           rocks and shovels
       Passes.luau         game pass IDs, prices and effects
       Products.luau       developer products (Starter Pack, Rare Egg, coin packs)
+      Codes.luau          redeemable codes (add new ones here)
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
       Index.luau          Dino Index variants, page rewards, Baby odds
@@ -215,6 +217,7 @@ src/
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
       ProductService      Rare Egg and coin packs
+      CodeService         redeemable codes
       NpcService          the Egg Thief
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
@@ -233,7 +236,7 @@ src/
       RebirthController   Rebirth row in the Shop
       DailyController     daily streak popup
       EventController     event timer pill
-      ProductController   Robux deals and coin packs in the Shop
+      ProductController   Codes box, Robux deals and coin packs in the Shop
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```
