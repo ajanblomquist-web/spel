@@ -535,6 +535,7 @@ local function row(parent: Instance, order: number, title: string, subtitle: str
 		Parent = frame,
 	})
 	label({
+		Name = "Subtitle",
 		Position = UDim2.fromOffset(14, 42),
 		Size = UDim2.new(1, -190, 0, 24),
 		Text = subtitle,
@@ -552,6 +553,31 @@ local function row(parent: Instance, order: number, title: string, subtitle: str
 		Parent = frame,
 	})
 	return frame, button
+end
+
+-- A coloured title bar that starts a section in a list (Shop, Passes...).
+local function sectionHeader(parent: Instance, order: number, text: string, color: Color3?): Frame
+	local frame = make("Frame", {
+		LayoutOrder = order,
+		Size = UDim2.new(1, -12, 0, 44),
+		BackgroundColor3 = color or COLORS.PanelLight,
+		ZIndex = 12,
+		Parent = parent,
+	}, { corner(14) })
+	make("TextLabel", {
+		Position = UDim2.fromOffset(12, 4),
+		Size = UDim2.new(1, -24, 1, -8),
+		BackgroundTransparency = 1,
+		Font = FONT,
+		Text = text,
+		TextScaled = true,
+		TextColor3 = COLORS.Text,
+		TextStrokeTransparency = 0.4,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 13,
+		Parent = frame,
+	})
+	return frame
 end
 
 local shopRows = {} -- { { Category, Tier, Button } }
@@ -580,6 +606,13 @@ local function buildShop()
 	shopPanel, list = buildPanel("ShopPanel", "Shop")
 	local order = 0
 	local function add(category: string, items, describe)
+		order += 1
+		sectionHeader(
+			list,
+			order,
+			if category == "Rocks" then "TRAINING ROCKS" else "SHOVELS",
+			if category == "Rocks" then Color3.fromRGB(150, 100, 60) else Color3.fromRGB(60, 120, 170)
+		)
 		for tier, item in items do
 			if tier > 1 then
 				order += 1
@@ -659,7 +692,9 @@ end
 local function buildPasses()
 	local list
 	passesPanel, list = buildPanel("PassesPanel", "Game Passes")
-	starterRow, starterButton = row(list, 0, Products.StarterPack.Name, Products.StarterPack.Description)
+	-- The Starter Pack lives in the Shop's ROBUX DEALS section (see ProductController).
+	starterRow, starterButton =
+		row(UIController.ShopList(), 901, Products.StarterPack.Name, Products.StarterPack.Description)
 	starterRow.BackgroundColor3 = Color3.fromRGB(150, 110, 20)
 	starterButton.BackgroundColor3 = COLORS.Green
 	starterButton.Activated:Connect(function()
@@ -859,6 +894,7 @@ function UIController.ShopList(): ScrollingFrame
 	return shopPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame
 end
 UIController.Row = row
+UIController.SectionHeader = sectionHeader
 
 function UIController.PassesList(): ScrollingFrame
 	return passesPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame

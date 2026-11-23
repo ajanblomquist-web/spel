@@ -217,21 +217,7 @@ end
 local function buildShopRows()
 	local list = UI.ShopList()
 	local order = 500
-	local header = UI.Make("Frame", {
-		LayoutOrder = order,
-		Size = UDim2.new(1, -12, 0, 50),
-		BackgroundColor3 = UI.Colors.Red,
-		ZIndex = 12,
-		Parent = list,
-	}, { UI.Corner(14) })
-	UI.Label({
-		Position = UDim2.fromOffset(12, 4),
-		Size = UDim2.new(1, -24, 1, -8),
-		Text = "WEAPONS: bonk egg carriers to make them drop!",
-		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 13,
-		Parent = header,
-	})
+	UI.SectionHeader(list, order, "WEAPONS: bonk egg carriers!", UI.Colors.Red)
 
 	for _, weapon in Weapons.List do
 		order += 1
@@ -248,6 +234,8 @@ local function buildShopRows()
 		end)
 		weaponRows[weapon.Id] = button
 	end
+	order += 1
+	UI.SectionHeader(list, order, "WEAPON SKINS (look only)", UI.Colors.Purple)
 	for _, skin in Weapons.Skins do
 		order += 1
 		local _, button = UI.Row(list, order, skin.Name, "Works on every weapon. Looks only.")

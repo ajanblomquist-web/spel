@@ -45,6 +45,7 @@ local function defaultData()
 		Steals = 0, -- eggs stolen from other players (shown on the leaderboard)
 		Dinos = {}, -- { { Id, DinoId, Rarity, Size, Mutation, Zone, Baby } }, one per pedestal
 		Incubating = {}, -- { { Egg = { Id, Rarity, Size, Mutation }, ReadyAt = unix time } }
+		PendingEggs = {}, -- bought eggs waiting for a free incubator (same shape as Egg)
 		LastOnline = 0,
 		Quest = { Index = 1, Progress = 0 }, -- position in Config/Quests
 		Boosts = {}, -- { [boostName] = unix time it ends }

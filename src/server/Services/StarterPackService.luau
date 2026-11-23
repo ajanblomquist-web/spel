@@ -36,9 +36,7 @@ function StarterPackService.Init(Services)
 		BoostService.Add(player, "Coins", 30 * 60)
 		DataService.AddCoins(player, 1000)
 		local egg = { Id = DataService.NewId(), Rarity = "Rare", Size = "Normal", Mutation = "None" }
-		if not NestService.TryAddEgg(player, egg) then
-			DataService.AddCoins(player, 1500) -- incubators full: coins instead of the egg
-		end
+		NestService.GiveEgg(player, egg)
 		Notify.Player(player, "Starter Pack unlocked! Enjoy 2x Coins!", "epic")
 	end)
 

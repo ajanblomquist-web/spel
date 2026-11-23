@@ -66,7 +66,7 @@ Now press **Play**.
 
 **Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
 
-**Testing the Starter Pack:** it pops up once after your first hatch. In Studio its button says "Get it (test)" and grants it without Robux. Later it's also at the top of the **Passes** menu.
+**Testing the Starter Pack:** it pops up once after your first hatch. In Studio its button says "Get it (test)" and grants it without Robux. Later it's in the **Shop** under ROBUX DEALS.
 
 ---
 
@@ -159,6 +159,8 @@ Create these in **Creator Hub > Monetization > Developer Products** and paste th
 | Product | What you get | Suggested R$ |
 |---|---|---|
 | Starter Pack (one time) | 2x Coins for 30 min, a Rare egg, 1,000 coins | 99 |
+| Rare Egg (Shop) | One Rare egg (dinos and odds shown on the row). Waits for a free incubator if yours are full | 49 |
+| 5 / 10 / 24 hours of coins (Shop) | That many hours of your current income (at least 2,500 per hour) | 99 / 179 / 349 |
 
 Boost potions, Server Luck and Instant Hatch come in milestone 3.
 
@@ -176,7 +178,7 @@ src/
       Dinos.luau          which dinos hatch from each rarity and their coins/s
       Shop.luau           rocks and shovels
       Passes.luau         game pass IDs, prices and effects
-      Products.luau       developer products (Starter Pack)
+      Products.luau       developer products (Starter Pack, Rare Egg, coin packs)
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
       Index.luau          Dino Index variants, page rewards, Baby odds
@@ -212,6 +214,7 @@ src/
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
+      ProductService      Rare Egg and coin packs
       NpcService          the Egg Thief
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
@@ -230,6 +233,7 @@ src/
       RebirthController   Rebirth row in the Shop
       DailyController     daily streak popup
       EventController     event timer pill
+      ProductController   Robux deals and coin packs in the Shop
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

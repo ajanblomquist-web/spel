@@ -307,6 +307,23 @@ function NestService.TryAddEgg(player: Player, egg): boolean
 	return true
 end
 
+-- For eggs the player bought: into an incubator now, or queued until one is
+-- free (a bought egg is never lost or swapped for coins).
+function NestService.GiveEgg(player: Player, egg)
+	if NestService.TryAddEgg(player, egg) then
+		return
+	end
+	local data = DataService.Get(player)
+	if data then
+		table.insert(data.PendingEggs, egg)
+		Notify.Player(
+			player,
+			"Your " .. egg.Rarity .. " egg goes in as soon as an incubator is free!",
+			"info"
+		)
+	end
+end
+
 local function hatch(player: Player, data, egg)
 	local record = {
 		Id = egg.Id,
@@ -368,6 +385,13 @@ local function processHatching(player: Player)
 			waiting = true
 		end
 		i += 1
+	end
+
+	-- Bought eggs waiting for a free incubator.
+	while #data.PendingEggs > 0 and #data.Incubating < Balance.IncubatorSlots do
+		local egg = table.remove(data.PendingEggs, 1)
+		NestService.TryAddEgg(player, egg)
+		Notify.Player(player, "Your " .. egg.Rarity .. " egg is in an incubator now!", "good")
 	end
 
 	if hatchedAny then

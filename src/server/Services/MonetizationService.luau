@@ -63,9 +63,9 @@ function MonetizationService.OnProduct(key: string, handler: (Player, any) -> ()
 end
 
 local function productKeyForId(productId: number): string?
-	for key, product in Products do
+	for _, product in Products.List do
 		if product.ProductId == productId and productId ~= 0 then
-			return key
+			return product.Key
 		end
 	end
 	return nil
@@ -143,7 +143,7 @@ function MonetizationService.Start()
 
 	-- Studio-only: test a developer product without Robux.
 	Remotes.Get("StudioBuyProduct").OnServerEvent:Connect(function(player, key)
-		if RunService:IsStudio() and type(key) == "string" and Products[key] then
+		if RunService:IsStudio() and type(key) == "string" and productHandlers[key] then
 			grantProduct(player, key, nil)
 		end
 	end)
