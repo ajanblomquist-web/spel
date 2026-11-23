@@ -19,9 +19,16 @@ local ORDER = {
 	"FlingService",
 	"ShopService",
 	"QuestService",
+	"IndexService",
+	"LeaderboardService",
 	"GiftService",
 	"StarterPackService",
 	"NpcService",
+	"WeaponService",
+	"HintService",
+	"RebirthService",
+	"DailyService",
+	"EventService",
 }
 
 local Services = {}

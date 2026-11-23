@@ -9,6 +9,8 @@ local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local WeightedRandom = require(ReplicatedStorage.Shared.Util.WeightedRandom)
 
+local EventService = require(script.Parent.Services.EventService)
+
 local EggRoll = {}
 
 local rng = Random.new()
@@ -26,7 +28,11 @@ function EggRoll.Roll(luck: number, zoneId: string): Egg
 		return entry.Weight * luck ^ entry.LuckPower
 	end)
 	local size = WeightedRandom.Pick(Eggs.Sizes, rng)
-	local mutation = WeightedRandom.Pick(Eggs.Mutations, rng)
+	-- Events like Golden Hour make mutations more likely.
+	local mutationBoost = EventService.Multiplier("Mutation")
+	local mutation = WeightedRandom.Pick(Eggs.Mutations, rng, function(entry)
+		return if entry.Id == "None" then entry.Weight else entry.Weight * mutationBoost
+	end)
 	return {
 		Id = HttpService:GenerateGUID(false),
 		Rarity = rarity.Id,

@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 
 local Visuals = {}
 
@@ -106,7 +107,8 @@ local function dinoDisplayName(record): string
 		table.insert(parts, record.Mutation)
 	end
 	table.insert(parts, dino and dino.Name or record.DinoId)
-	return table.concat(parts, " ")
+	local name = table.concat(parts, " ")
+	return if record.Baby then "Baby " .. name else name
 end
 Visuals.DinoDisplayName = dinoDisplayName
 
@@ -161,8 +163,31 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 		end
 	end
 
-	if size and size.Scale ~= 1 then
-		model:ScaleTo(size.Scale)
+	-- Babies: small body, big head, pink glow.
+	if record.Baby then
+		local head = model:FindFirstChild("Head")
+		if head and head:IsA("BasePart") then
+			local body = model.PrimaryPart :: BasePart
+			local offset = body.CFrame:ToObjectSpace(head.CFrame)
+			head.Size *= 1.6
+			head.CFrame = body.CFrame * (offset + Vector3.new(0, 0.6, 0.4))
+		end
+		for _, name in { "EyeL", "EyeR" } do
+			local eye = model:FindFirstChild(name)
+			if eye and eye:IsA("BasePart") then
+				eye.Size *= 2
+				eye.CFrame += Vector3.new(0, 0.6, -0.6)
+			end
+		end
+		local glow = Instance.new("Highlight")
+		glow.FillTransparency = 1
+		glow.OutlineColor = Index.BabyColor
+		glow.Parent = model
+	end
+
+	local scale = (size and size.Scale or 1) * (if record.Baby then Index.BabyScale else 1)
+	if scale ~= 1 then
+		model:ScaleTo(scale)
 	end
 
 	for _, d in model:GetDescendants() do
@@ -177,7 +202,12 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 	local _, extents = model:GetBoundingBox()
 	Visuals.Billboard(model.PrimaryPart :: BasePart, {
 		{ Text = dinoDisplayName(record) },
-		{ Text = string.upper(record.Rarity), Color = rarity.Color },
+		{
+			Text = if record.Baby
+				then "BABY " .. string.upper(record.Rarity)
+				else string.upper(record.Rarity),
+			Color = if record.Baby then Index.BabyColor else rarity.Color,
+		},
 		{ Text = "+" .. FormatNumber(incomePerSecond) .. "/s", Color = Color3.fromRGB(255, 230, 90) },
 	}, Vector2.new(7, 3), extents.Y / 2 + 2, 80)
 

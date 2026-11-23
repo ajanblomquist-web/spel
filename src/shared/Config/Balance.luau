@@ -20,6 +20,10 @@ Balance.FieldSpeedMax = 2.25
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)
 Balance.TrainRange = 14 -- studs from the training rock
+-- Free AFK training: standing at the rock trains you by itself every this many
+-- seconds (half the speed of tapping). The Auto Train pass trains at full speed
+-- from anywhere.
+Balance.FreeAutoTrainSeconds = 0.6
 
 -- Fling
 Balance.FlingRange = 14 -- studs from the launch pad
@@ -54,7 +58,7 @@ Balance.NestLockSeconds = 60 -- free nest lock: nobody can steal from your incub
 Balance.NestLockCooldown = 60 -- wait this long after a lock ends before locking again
 
 -- Base
-Balance.BasePedestals = 4
+Balance.BasePedestals = 6
 Balance.IncubatorSlots = 3
 Balance.DeliveryRadius = 20 -- studs from your plot centre that counts as "home"
 Balance.SellSeconds = 120 -- selling a dino pays this many seconds of its income
@@ -85,6 +89,7 @@ Balance.Studio = {
 	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
 	GiftTimeScale = 1, -- set to 0.1 to make playtime gifts unlock 10x sooner while testing
+	BabyChance = 0, -- set to e.g. 0.25 to hatch lots of Baby dinos while testing (0 = normal odds)
 }
 
 function Balance.GiftTimeScale(): number

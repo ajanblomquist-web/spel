@@ -55,7 +55,7 @@ Eggs.Rarities = {
 
 -- Size changes both the dino's scale and its income.
 Eggs.Sizes = {
-	{ Id = "Tiny", Weight = 20, Multiplier = 0.8, Scale = 0.7 },
+	{ Id = "Small", Weight = 20, Multiplier = 0.8, Scale = 0.7 },
 	{ Id = "Normal", Weight = 60, Multiplier = 1, Scale = 1 },
 	{ Id = "Big", Weight = 15, Multiplier = 1.5, Scale = 1.3 },
 	{ Id = "Huge", Weight = 4.5, Multiplier = 2.5, Scale = 1.7 },

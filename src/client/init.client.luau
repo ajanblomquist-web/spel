@@ -6,8 +6,14 @@ local ORDER = {
 	"WorldController",
 	"RevealController",
 	"QuestController",
+	"IndexController",
 	"TrainingController",
 	"FlingController",
+	"WeaponController",
+	"HintController",
+	"RebirthController",
+	"DailyController",
+	"EventController",
 }
 
 for _, name in ORDER do

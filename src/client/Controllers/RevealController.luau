@@ -14,6 +14,7 @@ local TweenService = game:GetService("TweenService")
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local Products = require(ReplicatedStorage.Shared.Config.Products)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
@@ -220,9 +221,15 @@ local function showHatch(record, income: number, isFirst: boolean)
 	end
 	egg:Destroy()
 
-	-- 2. Flash, rays, and the dino card.
+	-- 2. Flash, rays, and the dino card. Babies get a pink double flash and extra rays.
+	local baby = record.Baby == true
+	local glowColor = if baby then Index.BabyColor else rarity.Color
 	flash(root)
-	local stopRays = rays(root, rarity.Color, if rarity.Order >= 3 then 10 else 6)
+	if baby then
+		task.wait(0.15)
+		flash(root)
+	end
+	local stopRays = rays(root, glowColor, if baby then 16 elseif rarity.Order >= 3 then 10 else 6)
 
 	local card = UI.Make("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -231,7 +238,7 @@ local function showHatch(record, income: number, isFirst: boolean)
 		BackgroundColor3 = UI.Colors.Panel,
 		ZIndex = 60,
 		Parent = root,
-	}, { UI.Corner(22), UI.Stroke(5, rarity.Color) })
+	}, { UI.Corner(22), UI.Stroke(5, glowColor) })
 	local scale = UI.Make("UIScale", { Scale = 0.1, Parent = card })
 	tween(scale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
 
@@ -242,15 +249,23 @@ local function showHatch(record, income: number, isFirst: boolean)
 	if record.Mutation ~= "None" then
 		table.insert(extras, record.Mutation)
 	end
+	if baby then
+		table.insert(extras, Index.BabyIncomeMultiplier .. "x coins")
+	end
 
+	local name = dino and dino.Name or record.DinoId
 	local lines = {
 		{
-			Text = if isFirst then "YOUR FIRST DINO!" else "YOU HATCHED",
+			Text = if baby then "IT'S A BABY!" elseif isFirst then "YOUR FIRST DINO!" else "YOU HATCHED",
 			Size = 30,
-			Color = Color3.new(1, 1, 1),
+			Color = if baby then Index.BabyColor else Color3.new(1, 1, 1),
 		},
-		{ Text = dino and dino.Name or record.DinoId, Size = 52, Color = Color3.new(1, 1, 1) },
-		{ Text = string.upper(record.Rarity), Size = 36, Color = rarity.Color },
+		{ Text = if baby then "Baby " .. name else name, Size = 52, Color = Color3.new(1, 1, 1) },
+		{
+			Text = if baby then "BABY " .. string.upper(record.Rarity) else string.upper(record.Rarity),
+			Size = 36,
+			Color = glowColor,
+		},
 		{
 			Text = if #extras > 0 then table.concat(extras, " + ") .. "!" else "",
 			Size = 26,
@@ -307,6 +322,50 @@ local function showBreakthrough(data)
 		Size = UDim2.fromOffset(560, 34),
 		Text = "Train a little, then fling all the way to Amber Cliffs!",
 		TextColor3 = Color3.fromRGB(255, 200, 120),
+		ZIndex = 60,
+		Parent = root,
+	})
+	waitClosed()
+	stopRays()
+end
+
+-- Rebirth ----------------------------------------------------------------------------
+
+local function showRebirth(data)
+	local color = Color3.fromRGB(255, 120, 220)
+	local root, waitClosed = overlay(9)
+	flash(root)
+	local stopRays = rays(root, color, 14)
+	local title = UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.36),
+		Size = UDim2.fromOffset(600, 90),
+		Text = "REBIRTH " .. data.Count .. "!",
+		TextColor3 = color,
+		ZIndex = 60,
+		Parent = root,
+	})
+	local scale = UI.Make("UIScale", { Scale = 0.1, Parent = title })
+	tween(scale, 0.5, { Scale = 1 }, Enum.EasingStyle.Back)
+	UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.54),
+		Size = UDim2.fromOffset(560, 40),
+		Text = string.format(
+			"Forever: x%.2f Strength, x%.2f Coins, x%.2f Luck",
+			data.Strength,
+			data.Coins,
+			data.Luck
+		),
+		ZIndex = 60,
+		Parent = root,
+	})
+	UI.Label({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.65),
+		Size = UDim2.fromOffset(560, 34),
+		Text = "Your dinos and Index stay. Climb back up faster than ever!",
+		TextColor3 = Color3.fromRGB(255, 200, 230),
 		ZIndex = 60,
 		Parent = root,
 	})
@@ -395,6 +454,27 @@ function RevealController.Start(Controllers)
 		elseif kind == "Breakthrough" then
 			queueFullscreen(function()
 				showBreakthrough(data)
+			end)
+		elseif kind == "IndexPage" then
+			RevealController.Banner(
+				string.upper(data.Rarity) .. " PAGE COMPLETE!",
+				"+"
+					.. FormatNumber(data.Coins)
+					.. " coins, Baby odds now x"
+					.. string.format("%.1f", data.BabyLuck),
+				Color3.fromRGB(255, 140, 200)
+			)
+		elseif kind == "Event" then
+			RevealController.Banner(data.Name .. "!", data.Text, Color3.fromRGB(255, 150, 40))
+		elseif kind == "Daily" then
+			RevealController.Banner(
+				"DAY " .. data.Streak .. " STREAK!",
+				data.Text,
+				Color3.fromRGB(60, 150, 255)
+			)
+		elseif kind == "Rebirth" then
+			queueFullscreen(function()
+				showRebirth(data)
 			end)
 		elseif kind == "StarterOffer" then
 			queueFullscreen(showStarterOffer)

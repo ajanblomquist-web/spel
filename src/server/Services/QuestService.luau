@@ -7,6 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Quests = require(ReplicatedStorage.Shared.Config.Quests)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -17,7 +18,8 @@ local QuestService = {}
 local DataService, BoostService
 
 -- Quests that complete in one go show progress 0/1.
-local ONE_SHOT = { RockTier = true, ShovelTier = true, HatchRarity = true, HatchZone = true }
+local ONE_SHOT =
+	{ RockTier = true, ShovelTier = true, HatchRarity = true, HatchZone = true, IndexPage = true }
 
 local function current(player: Player)
 	local data = DataService.Get(player)
@@ -51,6 +53,9 @@ local function publish(player: Player)
 		return
 	end
 	local target = if ONE_SHOT[quest.Type] then 1 else quest.Target
+	if quest.Type == "IndexCount" then
+		data.Quest.Progress = math.min(Index.Count(data.Index), target) -- boxes you already have count
+	end
 	player:SetAttribute("QuestIndex", data.Quest.Index)
 	player:SetAttribute("QuestText", quest.Text)
 	player:SetAttribute("QuestProgress", math.min(data.Quest.Progress, target))
@@ -104,6 +109,8 @@ local function alreadyDone(quest, data): boolean
 	return (quest.Type == "RockTier" and data.RockTier >= quest.Target)
 		or (quest.Type == "ShovelTier" and data.ShovelTier >= quest.Target)
 		or (quest.Type == "Distance" and data.Stats.BestDistance >= quest.Target)
+		or (quest.Type == "IndexCount" and Index.Count(data.Index) >= quest.Target)
+		or (quest.Type == "IndexPage" and data.IndexPages[quest.Target] == true)
 end
 
 checkInstant = function(player: Player)
@@ -167,6 +174,16 @@ function QuestService.Init(Services)
 		elseif quest.Type == "HatchZone" and record.Zone == quest.Target then
 			complete(player)
 		end
+	end)
+	Events.On("IndexNew", function(player)
+		local quest = current(player)
+		if quest and quest.Type == "IndexCount" then
+			publish(player)
+			checkInstant(player)
+		end
+	end)
+	Events.On("IndexPage", function(player)
+		checkInstant(player)
 	end)
 	Events.On("Steal", function(player)
 		addProgress(player, "Steal", 1)

@@ -6,12 +6,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local Passes = require(ReplicatedStorage.Shared.Config.Passes)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local IncomeService = {}
 
 local DataService, MonetizationService, NestService, BoostService
+local RebirthService, EventService
 local fractions: { [Player]: number } = {}
 
 -- Income of one dino before pass multipliers.
@@ -22,7 +24,8 @@ function IncomeService.BaseIncome(record): number
 	if not dino then
 		return 0
 	end
-	return dino.Income * (size and size.Multiplier or 1) * (mutation and mutation.Multiplier or 1)
+	local baby = if record.Baby then Index.BabyIncomeMultiplier else 1
+	return dino.Income * (size and size.Multiplier or 1) * (mutation and mutation.Multiplier or 1) * baby
 end
 
 -- Coin multiplier from passes.
@@ -35,6 +38,8 @@ function IncomeService.Multiplier(player: Player): number
 		mult *= Passes.Effects.VIPCoinMultiplier
 	end
 	mult *= BoostService.Multiplier(player, "Coins")
+	mult *= RebirthService.Multiplier(player, "Coins")
+	mult *= EventService.Multiplier("Coins")
 	return mult
 end
 
@@ -79,6 +84,8 @@ function IncomeService.Init(Services)
 	MonetizationService = Services.MonetizationService
 	NestService = Services.NestService
 	BoostService = Services.BoostService
+	RebirthService = Services.RebirthService
+	EventService = Services.EventService
 
 	DataService.OnLoaded(function(player, data)
 		fractions[player] = 0

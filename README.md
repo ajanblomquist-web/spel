@@ -82,7 +82,7 @@ Now press **Play**.
   - Free **nest lock** for 60 s, then a 60 s cooldown (Fortress Gate pass makes it 3 min)
   - **Steals** column on the leaderboard, next to Coins and Strength
   - Hatched dinos can never be stolen, only eggs
-- 3 incubators, 4 pedestals (+6 with a pass), selling dinos
+- 3 incubators, 6 pedestals (+6 with a pass), selling dinos
 - Coins per second, offline income (50%, up to 8 hours) with a welcome-back popup
 - Server-wide shout when someone hatches a Legendary or better
 - All 10 game passes wired up (see below)
@@ -99,7 +99,7 @@ Now press **Play**.
 - **Starter Pack** offer shown once, right after the first hatch (a developer product: 2x Coins for 30 min, a Rare egg, 1,000 coins; nothing random)
 
 **First 30 minutes: burst, slow climb, breakthrough**
-- **Quest chain** of 21 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
+- **Quest chain** of 24 quests, always one on screen with a progress bar and its reward (coins or a timed 2x boost)
 - **Egg Thief** NPC walking around the hub with an egg anyone can steal: teaches stealing and works in solo servers (counts for quests, not the Steals leaderboard)
 - **Field speed**: you walk faster the further out into the fling field you are (up to 2.25x at 600 studs), so fetching far eggs stays quick
 - **Playtime gifts** at 3, 8, 15, 25, 40 and 60 minutes (coins, 2x boosts, a Rare and an Epic egg)
@@ -107,6 +107,26 @@ Now press **Play**.
 - **Timed boosts** (2x Luck, Coins, Strength) with timers on the left
 - **Progression curve** retuned (checked with `tools/curve_sim.py`): Fern Valley ~3 min, Tar Pits ~10-15 min, then a slower climb to the **Gold Rock breakthrough** around minute 25-30 (6x Strength per rep, full-screen BREAKTHROUGH celebration) that sends you to the new zone:
 - **Amber Cliffs** (zone 4, 550-850m, x4 luck) with 4 dinos you can only get there
+
+## What's in milestone 3 so far (first 7 days: collection)
+
+- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 8 boxes per row: Dino, Gold, Lava, Ice, Crystal, Rainbow, Huge (Colossal) and Baby. 19 dinos x 8 = 152 boxes. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
+- **Page rewards**: finding every dino of a rarity pays one-time coins (500 for Common up to 20M for Secret) and gives +10% Baby odds for good.
+- **Baby dinos**: every hatch has a 1 in 500 chance to be a Baby: 3x income, small body with a big head and a pink outline, its own reveal ("IT'S A BABY!") and a server-wide shout. Never sold for Robux.
+- **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
+- Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
+- To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
+- **Bonk weapons**: when an egg carrier is in reach, a red **BONK!** button shows. A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
+- **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
+- **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
+- **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
+- **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
+- **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Strength boost; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
+- **6 pedestals** for everyone (12 with Extra Pedestals).
+- **Rebirth** (top row of the Shop, after reaching Amber Cliffs): pay coins (1M, then 3x more each time) to reset coins, Strength, rock and shovel. You keep dinos, Index, eggs, passes and weapons, and get +50% Strength, +25% coins and +10% luck forever per rebirth, a "Rebirth N" tag above your head and a Rebirths column on the player list. Numbers in `Config/Rebirth.luau`.
+- **Daily streak**: a 7-day reward track (coins, boosts, Rare egg, Epic egg on day 7) that pops up once a day after the tutorial. Missing a day starts it over. Rewards in `Config/Daily.luau`.
+- **Server events**: a 10-minute event at the start of every hour, the same on every server: Double Luck, Double Coins, Golden Hour (3x mutations), Baby Boom (5x Baby odds), Strength Surge. A banner announces it and a timer pill shows under the top bar. As the game owner (or anyone in Studio) type `/event DoubleLuck` (optionally `/event BabyBoom 30` for 30 minutes) or `/event stop` in chat; it reaches every server. Events in `Config/WorldEvents.luau`.
+- **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
 
@@ -119,14 +139,18 @@ All passes speed up the loop; none sell random rolls (so no odds-disclosure rule
 |---|---|---|
 | 2x Coins | Doubles dino income | 399 |
 | 2x Strength | Doubles Strength per rep | 199 |
-| Auto Train | Trains by itself at the rock | 249 |
-| Auto Fling | Flings by itself with a good hit at the pad | 349 |
+| Auto Train | Trains at full speed by itself, anywhere (the rock alone trains free at half speed) | 249 |
+| Auto Fling | Flings for you at the pad and a dino drone brings each egg straight to your nest (while an incubator is free) | 349 |
 | Lucky Shovel | +50% luck | 299 |
 | Fast Incubator | Eggs hatch 2x faster | 249 |
 | Extra Pedestals | +6 pedestals | 199 |
 | Speedy Boots | +25% walk speed | 149 |
 | Fortress Gate | Nest lock lasts 3 min | 149 |
 | VIP | +10% coins | 449 |
+| Amber Hammer (Shop) | Bonk weapon, same as the Raptor Claw | 149 |
+| Meteor Bat (Shop) | Bonk weapon, same as the Raptor Claw | 249 |
+| Golden / Lava / Crystal skin (Shop) | Weapon look only | 99 |
+| Rainbow skin (Shop) | Weapon look only | 149 |
 
 ## Developer products
 
@@ -155,6 +179,12 @@ src/
       Products.luau       developer products (Starter Pack)
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
+      Index.luau          Dino Index variants, page rewards, Baby odds
+      Weapons.luau        bonk weapons and skins
+      Social.luau         group ID and reward, pass hint texts
+      Rebirth.luau        rebirth price and bonuses
+      Daily.luau          daily streak rewards
+      WorldEvents.luau    server events
     Util/                 WeightedRandom, FormatNumber
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
@@ -172,6 +202,13 @@ src/
       FlingService        meter check, distance, zone, luck
       ShopService         buying upgrades, breakthrough celebration
       QuestService        tutorial and quest chain
+      IndexService        Dino Index, page rewards, Baby roll
+      LeaderboardService  global and weekly leaderboard boards
+      WeaponService       bonk weapons, skins, buying, the bonk
+      HintService         pass hints and the group reward
+      RebirthService      rebirth, permanent bonuses, rebirth tag
+      DailyService        daily login streak
+      EventService        hourly server events and /event commands
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
@@ -187,6 +224,12 @@ src/
       FlingController     FLING button, meter, flying shovel, distance counter, Auto Fling
       RevealController    hatch reveal, BREAKTHROUGH, banners, Starter Pack offer
       QuestController     quest card, gift button, boost timers
+      IndexController     Dino Index button and panel
+      WeaponController    BONK! button, hit effects, weapon rows in the Shop
+      HintController      hint card, "Join our group" row
+      RebirthController   Rebirth row in the Shop
+      DailyController     daily streak popup
+      EventController     event timer pill
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```

@@ -19,7 +19,7 @@ local DataService, BoostService, NestService
 local sessionStart: { [Player]: number } = {}
 local nextGift: { [Player]: number } = {}
 
-local function grant(player: Player, reward)
+function GiftService.Grant(player: Player, reward): string
 	if reward.Boost then
 		BoostService.Add(player, reward.Boost, reward.Seconds)
 		return BoostService.Describe(reward.Boost, reward.Seconds)
@@ -56,7 +56,7 @@ local function claim(player: Player)
 	end
 	nextGift[player] = index + 1
 	player:SetAttribute("NextGift", index + 1)
-	local text = grant(player, gift.Reward)
+	local text = GiftService.Grant(player, gift.Reward)
 	Remotes.Get("Celebrate"):FireClient(player, "Gift", { Text = "Gift: " .. text })
 	Notify.Player(player, "Gift opened: " .. text, "good")
 end
