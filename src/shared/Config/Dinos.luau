@@ -125,6 +125,72 @@ Dinos.List = {
 		Zone = "AmberCliffs",
 		Color = Color3.fromRGB(255, 150, 30),
 	},
+	-- Frozen Tundra exclusives
+	{
+		Id = "SnowCompy",
+		Name = "Snow Compy",
+		Rarity = "Uncommon",
+		Income = 6,
+		Zone = "FrozenTundra",
+		Color = Color3.fromRGB(235, 245, 255),
+	},
+	{
+		Id = "FrostRaptor",
+		Name = "Frost Raptor",
+		Rarity = "Rare",
+		Income = 18,
+		Zone = "FrozenTundra",
+		Color = Color3.fromRGB(150, 210, 255),
+	},
+	{
+		Id = "GlacierAnkylo",
+		Name = "Glacier Ankylo",
+		Rarity = "Epic",
+		Income = 55,
+		Zone = "FrozenTundra",
+		Color = Color3.fromRGB(120, 180, 230),
+	},
+	{
+		Id = "BlizzardSpino",
+		Name = "Blizzard Spino",
+		Rarity = "Legendary",
+		Income = 190,
+		Zone = "FrozenTundra",
+		Color = Color3.fromRGB(200, 230, 255),
+	},
+	-- Volcano Rim exclusives
+	{
+		Id = "EmberRaptor",
+		Name = "Ember Raptor",
+		Rarity = "Rare",
+		Income = 24,
+		Zone = "VolcanoRim",
+		Color = Color3.fromRGB(255, 110, 40),
+	},
+	{
+		Id = "MagmaStego",
+		Name = "Magma Stego",
+		Rarity = "Epic",
+		Income = 75,
+		Zone = "VolcanoRim",
+		Color = Color3.fromRGB(200, 60, 30),
+	},
+	{
+		Id = "InfernoSpino",
+		Name = "Inferno Spino",
+		Rarity = "Legendary",
+		Income = 260,
+		Zone = "VolcanoRim",
+		Color = Color3.fromRGB(255, 80, 20),
+	},
+	{
+		Id = "VolcanoTitan",
+		Name = "Volcano Titan",
+		Rarity = "Mythic",
+		Income = 500,
+		Zone = "VolcanoRim",
+		Color = Color3.fromRGB(110, 40, 30),
+	},
 }
 
 Dinos.ById = {}

@@ -21,8 +21,8 @@ STRENGTH_SCALE = 3  # Balance.StrengthScale
 BASE_DISTANCE = 30  # Balance.BaseDistance
 ROCKS = [(0, 2), (150, 5), (1500, 10), (55000, 60), (400000, 180), (4000000, 600)]  # (price, strength/rep)
 SHOVELS = [(0, 1, 1), (300, 1.15, 1.1), (6000, 1.3, 1.25), (120000, 1.8, 1.6), (600000, 2.2, 2.2), (6000000, 2.7, 3)]
-ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4)]  # (end distance, luck)
-TOUGHNESS = [1, 1, 1, 6.5]  # Zones Toughness
+ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4), (1150, 6), (1450, 9)]  # (end distance, luck)
+TOUGHNESS = [1, 1, 1, 6.5, 10, 40]  # Zones Toughness
 
 
 def distance_for(power):
@@ -89,7 +89,7 @@ def run(seed, minutes=45):
         zone = next(i for i, z in enumerate(ZONES) if distance < z[0])
         if zone not in reached:
             reached.add(zone)
-            log.append((t / 60, f"zone {zone + 1}"))
+            log.append((t / 60, f"zone {zone + 1}" + (f" (after {rebirths} rebirths)" if zone >= 4 else "")))
         luck = luck_at(distance) * SHOVELS[shovel][2] * (1 + rebirths * REBIRTH_LUCK)
         if first:
             rarity, hatch, first = 2, 8, False
@@ -105,7 +105,7 @@ def run(seed, minutes=45):
             coins += bonuses.pop(0)[1]
         # Rebirth as soon as Amber Cliffs is reached and it's affordable.
         price = REBIRTH_PRICE * REBIRTH_GROWTH ** rebirths
-        if 3 in reached and coins >= price:
+        if zone >= 3 and coins >= price:
             rebirths += 1
             coins = strength = 0
             rock = shovel = 0

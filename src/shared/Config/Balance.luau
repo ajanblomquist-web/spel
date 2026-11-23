@@ -14,8 +14,8 @@ Balance.CarrySpeedMultiplier = 0.75 -- carrying an egg makes you slower
 -- past the launch pad up to FieldSpeedMax at FieldSpeedFullAt studs and beyond.
 -- Stacks with Speedy Boots and the carry slowdown. No effect in the hub.
 Balance.FieldSpeedStart = 40
-Balance.FieldSpeedFullAt = 600
-Balance.FieldSpeedMax = 2.25
+Balance.FieldSpeedFullAt = 1000
+Balance.FieldSpeedMax = 3
 
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)

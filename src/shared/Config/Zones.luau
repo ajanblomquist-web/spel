@@ -58,6 +58,28 @@ local Zones: { Zone } = {
 		Color = Color3.fromRGB(235, 160, 50),
 		Material = Enum.Material.Sandstone,
 	},
+	-- Past Amber Cliffs: reached around the first rebirth (Frozen Tundra) and
+	-- after a couple of rebirths (Volcano Rim). Each has its own dinos.
+	{
+		Id = "FrozenTundra",
+		Name = "Frozen Tundra",
+		StartDistance = 850,
+		EndDistance = 1150,
+		Luck = 6,
+		Toughness = 10,
+		Color = Color3.fromRGB(225, 240, 255),
+		Material = Enum.Material.Snow,
+	},
+	{
+		Id = "VolcanoRim",
+		Name = "Volcano Rim",
+		StartDistance = 1150,
+		EndDistance = 1450,
+		Luck = 9,
+		Toughness = 40, -- the end of the map: many hours and several rebirths
+		Color = Color3.fromRGB(70, 35, 30),
+		Material = Enum.Material.CrackedLava,
+	},
 }
 
 local ZoneModule = {}

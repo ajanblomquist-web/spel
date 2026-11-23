@@ -110,7 +110,7 @@ Now press **Play**.
 
 ## What's in milestone 3 so far (first 7 days: collection)
 
-- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 4 boxes per row: Dino, Gold, Rainbow and Baby. 19 dinos x 4 = 76 boxes. The Secret page stays hidden until you hatch a Secret dino. Mutations are just Gold (2x) and Rainbow (10x, rare); size changes income but has no box. Old saves: Lava/Ice/Crystal dinos became Gold. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
+- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 4 boxes per row: Dino, Gold, Rainbow and Baby. 27 dinos x 4 = 108 boxes. The Secret page stays hidden until you hatch a Secret dino. Mutations are just Gold (2x) and Rainbow (10x, rare); size changes income but has no box. Old saves: Lava/Ice/Crystal dinos became Gold. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
 - **Page rewards**: finding every dino of a rarity pays one-time coins (500 for Common up to 20M for Secret) and gives +10% Baby odds for good.
 - **Baby dinos**: every hatch has a 1 in 500 chance to be a Baby: 3x income, small body with a big head and a pink outline, its own reveal ("IT'S A BABY!") and a server-wide shout. Never sold for Robux.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
@@ -127,6 +127,10 @@ Now press **Play**.
 - **Daily streak**: a 7-day reward track (coins, boosts, Rare egg, Epic egg on day 7) that pops up once a day after the tutorial. Missing a day starts it over. Rewards in `Config/Daily.luau`.
 - **Server events**: a 10-minute event at the start of every hour, the same on every server: Double Luck, Double Coins, Golden Hour (3x mutations), Baby Boom (5x Baby odds), Strength Surge. A banner announces it and a timer pill shows under the top bar. As the game owner (or anyone in Studio) type `/event DoubleLuck` (optionally `/event BabyBoom 30` for 30 minutes) or `/event stop` in chat; it reaches every server. Events in `Config/WorldEvents.luau`.
 - **Amber Cliffs is tough**: zones have a Toughness (Amber Cliffs 6.5), so each stud there takes 6.5x the fling power. Reaching it still takes ~25 min, but its far edge takes ~80 min, about as long as a first rebirth. Luck also rises the deeper you land in a zone (Amber Cliffs x4 at the start up to x6 at the edge), so longer flings always pay. Tuned in `Config/Zones.luau`.
+- **Two new zones past Amber Cliffs**, each with 4 dinos you can only get there:
+  - **Frozen Tundra** (850-1150m, x6 luck, Toughness 10): Snow Compy, Frost Raptor, Glacier Ankylo, Blizzard Spino. Reached around the first rebirth (~80 min in the simulator).
+  - **Volcano Rim** (1150-1450m, x9 luck, Toughness 40): Ember Raptor, Magma Stego, Inferno Spino, Volcano Titan (Mythic). Reached after about 2 rebirths (~4 h); its far edge takes ~9 h.
+  - Walking speed keeps ramping further out (up to 3x at 1000m) so the long walk home stays quick.
 - **Shop sections**: Codes, Rebirth, Training Rocks, Shovels, Weapons, Weapon Skins, Robux Deals (Starter Pack, Rare Egg) and Coin Packs.
 - **Codes**: type a code in the box at the top of the Shop. Each works once per player. Starting codes: `FOSSIL` (2x Luck 15 min), `RELEASE` (10 min of income, at least 1,000 coins), `DINOPOWER` (2x Strength 15 min). Add codes in `Config/Codes.luau` (rewards use the gift format; optional expiry date).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
