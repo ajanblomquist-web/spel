@@ -209,7 +209,7 @@ local function buildCanyon()
 			post.Parent = canyon
 			Visuals.Billboard(post, {
 				{ Text = zone.Name },
-				{ Text = "x" .. zone.Luck .. " luck", Color = Color3.fromRGB(120, 255, 140) },
+				{ Text = Zones.LuckText(zone), Color = Color3.fromRGB(120, 255, 140) },
 			}, Vector2.new(16, 5), 9, 600)
 		end
 	end
