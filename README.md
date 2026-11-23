@@ -62,7 +62,7 @@ Now press **Play**.
 
 **Testing game passes in Studio:** open **Passes** and press **Test it** on any pass to switch it on or off. This only works in Studio.
 
-**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch 10x faster in Studio, can make playtime gifts unlock sooner (`GiftTimeScale`, real timing by default), and can give you starting coins.
+**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section can make eggs hatch faster (`IncubationScale`) and playtime gifts unlock sooner (`GiftTimeScale`) in Studio (both use real timing by default), and can give you starting coins.
 
 **Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
 
@@ -116,9 +116,9 @@ Now press **Play**.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
 - Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
 - To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
-- **Bonk weapons**: when an egg carrier is in reach, a red **BONK!** button shows. A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
+- **Bonk weapons**: your weapon is a tool in the Roblox hotbar (press 1 or tap it). While you hold it and an egg carrier is in reach, a red **BONK!** button shows (clicking/tapping with the tool works too). A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
 - **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
-- **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
+- **Free AFK training**: standing at the training rock without tapping trains you by itself with half-strength reps (1 Strength per tick on the Pebble rock; "AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
 - **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
 - **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
 - **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Strength boost; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.

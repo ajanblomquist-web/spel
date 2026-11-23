@@ -1,5 +1,6 @@
 -- WeaponController.luau
--- The BONK! action button (shows when an egg carrier is in reach), the hit
+-- The weapon is a hotbar Tool. While it's held: the BONK! action button (when
+-- an egg carrier is in reach) or a tap/click with the tool bonks. Also the hit
 -- effects everyone sees, the knockback when you get bonked, and the weapon and
 -- skin rows in the Shop.
 
@@ -60,18 +61,46 @@ local function findTarget(range: number): Player?
 	return best
 end
 
+-- The weapon Tool is in your hand (equipped from the hotbar).
+local function holding(): boolean
+	local character = player.Character
+	if not character then
+		return false
+	end
+	for _, child in character:GetChildren() do
+		if child:IsA("Tool") and child:GetAttribute("BonkWeapon") then
+			return true
+		end
+	end
+	return false
+end
+
+local function tryBonk()
+	local weapon = equipped()
+	if os.clock() - lastBonk < weapon.Cooldown then
+		return
+	end
+	local target = findTarget(weapon.Range + 2)
+	if target then
+		lastBonk = os.clock()
+		Remotes.Get("Bonk"):FireServer(target)
+	end
+end
+
 -- Effects --------------------------------------------------------------------------
 
 local function swing(attacker: Player)
+	-- Roblox holds tools with a "RightGrip" weld in the hand; swing it.
 	local character = attacker.Character
-	local weapon = character and character:FindFirstChild("BonkWeapon")
-	local grip = weapon and weapon:FindFirstChild("Grip") :: Weld?
+	local hand = character
+		and (character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm"))
+	local grip = hand and hand:FindFirstChild("RightGrip") :: Weld?
 	if not grip then
 		return
 	end
 	local rest = grip.C0
 	local tween =
-		TweenService:Create(grip, TweenInfo.new(0.1), { C0 = rest * CFrame.Angles(math.rad(110), 0, 0) })
+		TweenService:Create(grip, TweenInfo.new(0.1), { C0 = rest * CFrame.Angles(math.rad(-110), 0, 0) })
 	tween:Play()
 	tween.Completed:Once(function()
 		TweenService:Create(grip, TweenInfo.new(0.25, Enum.EasingStyle.Back), { C0 = rest }):Play()
@@ -243,28 +272,34 @@ function WeaponController.Start(Controllers)
 	buildShopRows()
 
 	-- BONK! shows when a carrier is in reach (above FLING, below STOP!).
+	-- While the weapon is held: a BONK! button when a carrier is in reach
+	-- (big and easy on phones), and tapping/clicking with the tool works too.
 	UI.RegisterAction(60, function()
+		if not holding() then
+			return nil
+		end
 		local weapon = equipped()
-		local target = findTarget(weapon.Range)
-		if not target then
+		if not findTarget(weapon.Range) then
 			return nil
 		end
 		local wait = weapon.Cooldown - (os.clock() - lastBonk)
 		if wait > 0 then
 			return { Text = "Bonk in " .. math.ceil(wait) .. "s", Color = Color3.fromRGB(110, 110, 120) }
 		end
-		return {
-			Text = "BONK!",
-			Color = Color3.fromRGB(235, 70, 70),
-			Callback = function()
-				local now = findTarget(weapon.Range + 2)
-				if now then
-					lastBonk = os.clock()
-					Remotes.Get("Bonk"):FireServer(now)
-				end
-			end,
-		}
+		return { Text = "BONK!", Color = Color3.fromRGB(235, 70, 70), Callback = tryBonk }
 	end)
+
+	local function watchCharacter(character: Model)
+		character.ChildAdded:Connect(function(child)
+			if child:IsA("Tool") and child:GetAttribute("BonkWeapon") then
+				child.Activated:Connect(tryBonk)
+			end
+		end)
+	end
+	if player.Character then
+		watchCharacter(player.Character)
+	end
+	player.CharacterAdded:Connect(watchCharacter)
 
 	Remotes.Get("Bonk").OnClientEvent:Connect(function(attacker: Player, victim: Player, direction: Vector3)
 		swing(attacker)

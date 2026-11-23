@@ -1,9 +1,9 @@
 -- TrainingService.luau
 -- Each rep at the training rock adds Strength. More Strength = longer flings.
 --
--- Free AFK: standing at the rock trains you by itself at half speed (every
--- Balance.FreeAutoTrainSeconds). Tapping TRAIN is full speed. The Auto Train
--- pass trains at full speed from anywhere.
+-- Free AFK: standing at the rock without tapping trains you by itself at the
+-- tap rate with half-strength reps (Balance.FreeAutoTrainEfficiency). Tapping
+-- TRAIN gives full reps. The Auto Train pass gives full reps from anywhere.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -37,14 +37,16 @@ function TrainingService.Init(Services)
 	EventService = Services.EventService
 end
 
-local function doRep(player: Player)
+local lastActive: { [Player]: number } = {} -- last tapped or Auto Train rep
+
+local function doRep(player: Player, efficiency: number)
 	local data = DataService.Get(player)
 	if not data then
 		return
 	end
 	lastRep[player] = os.clock()
 	local rock = Shop.Rocks[data.RockTier] or Shop.Rocks[1]
-	local gain = rock.StrengthPerRep
+	local gain = rock.StrengthPerRep * efficiency
 	if MonetizationService.Has(player, "DoubleStrength") then
 		gain *= Passes.Effects.StrengthMultiplier
 	end
@@ -65,7 +67,8 @@ function TrainingService.Start()
 		local auto = type(options) == "table" and options.auto == true
 		local allowed = isNearRock(player) or (auto and MonetizationService.Has(player, "AutoTrain"))
 		if allowed then
-			doRep(player)
+			lastActive[player] = now
+			doRep(player, 1)
 		end
 	end)
 
@@ -75,9 +78,10 @@ function TrainingService.Start()
 			task.wait(0.1)
 			local now = os.clock()
 			for _, player in DataService.LoadedPlayers() do
-				local last = lastRep[player] or 0
-				if now - last >= Balance.FreeAutoTrainSeconds and isNearRock(player) then
-					doRep(player)
+				local idle = now - (lastActive[player] or 0) >= Balance.FreeAutoTrainIdleSeconds
+				local due = now - (lastRep[player] or 0) >= Balance.TrainCooldown
+				if idle and due and isNearRock(player) then
+					doRep(player, Balance.FreeAutoTrainEfficiency)
 				end
 			end
 		end
@@ -85,6 +89,7 @@ function TrainingService.Start()
 
 	game:GetService("Players").PlayerRemoving:Connect(function(player)
 		lastRep[player] = nil
+		lastActive[player] = nil
 	end)
 end
 
