@@ -8,3 +8,4 @@ sourcemap.json
 roblox.yml
 Packages/
 .DS_Store
+__pycache__/

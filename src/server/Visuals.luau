@@ -5,6 +5,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local DinoLooks = require(ReplicatedStorage.Shared.Config.DinoLooks)
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
@@ -112,6 +113,112 @@ local function dinoDisplayName(record): string
 end
 Visuals.DinoDisplayName = dinoDisplayName
 
+local BABY_HEAD_GROWTH = 1.6
+local DEFAULT_MODEL_HEIGHT = 6 -- studs, same as the greybox dino
+local DEFAULT_MAX_LENGTH = 11 -- pedestal rows are 7.5 studs apart; a bit of overlap is fine
+local DEFAULT_MAX_WIDTH = 5.5 -- pedestals are 6 studs apart
+local CREAM = Color3.fromRGB(245, 236, 215)
+local EYE_COLOR = Color3.fromRGB(25, 20, 28)
+local FACE_COLORS = { -- parts that keep their colour on Gold/Rainbow dinos too
+	Mouth = Color3.fromRGB(120, 30, 45),
+	Nostril = Color3.fromRGB(120, 30, 45),
+	Tongue = Color3.fromRGB(240, 110, 130),
+	Cheek = Color3.fromRGB(255, 140, 150),
+}
+
+local function isFacePart(partName: string): boolean
+	if string.find(partName, "Eye") then
+		return true
+	end
+	for key in FACE_COLORS do
+		if string.find(partName, key) then
+			return true
+		end
+	end
+	return false
+end
+
+-- The role of an imported model's part, from its name (see tools/blender/dino_maker.py):
+-- "HeadBelly" -> "Belly", "EyeShineL" -> "EyeShine", "Accent" -> "Accent".
+local function partRole(partName: string): string
+	local role = if string.sub(partName, 1, 4) == "Head" and #partName > 4
+		then string.sub(partName, 5)
+		else partName
+	if string.sub(role, 1, 8) == "EyeShine" then
+		return "EyeShine"
+	elseif string.sub(role, 1, 3) == "Eye" then
+		return "Eye"
+	end
+	return role
+end
+
+-- The colour of an imported model's part, or nil to keep its imported colour.
+local function partColor(role: string, dino, look: DinoLooks.Look): Color3?
+	local base = look.Color or (dino and dino.Color) or Color3.fromRGB(150, 150, 150)
+	if role == "EyeShine" then
+		return Color3.new(1, 1, 1)
+	elseif role == "Eye" then
+		return EYE_COLOR
+	elseif role == "Body" or role == "Head" then
+		return base
+	elseif role == "Belly" then
+		return look.Belly or base:Lerp(CREAM, 0.65)
+	elseif role == "Accent" then
+		return look.Accent or base:Lerp(Color3.new(0, 0, 0), 0.35)
+	elseif role == "Pattern" then
+		return look.Pattern or base:Lerp(Color3.new(0, 0, 0), 0.25)
+	elseif role == "Bone" then
+		return CREAM
+	end
+	return FACE_COLORS[role]
+end
+
+-- Colours, sizes and turns a model imported from Blender so it acts like the greybox:
+-- PrimaryPart is "Body", it faces -Z (head in front) and stands DEFAULT_MODEL_HEIGHT tall.
+local function prepareImportedModel(model: Model, dino, look: DinoLooks.Look)
+	local body = (model.PrimaryPart or model:FindFirstChild("Body", true)) :: BasePart
+	model.PrimaryPart = body
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			local role = partRole(d.Name)
+			local color = partColor(role, dino, look)
+			if color then
+				d.Color = color
+				d.Material = if look.Glow == role then Enum.Material.Neon else Enum.Material.SmoothPlastic
+				local surface = d:FindFirstChildOfClass("SurfaceAppearance")
+				if surface then
+					surface:Destroy() -- so the colour above shows
+				end
+			end
+		end
+	end
+
+	-- Point the pivot so the head is in front, whatever way the file was exported.
+	local head = model:FindFirstChild("Head", true)
+	local forward = Vector3.new(0, 0, -1)
+	if head and head:IsA("BasePart") then
+		local flat = (head.Position - body.Position) * Vector3.new(1, 0, 1)
+		if flat.Magnitude > 0.01 then
+			forward = flat.Unit
+		end
+	end
+	local boxCFrame = model:GetBoundingBox()
+	local pivot = CFrame.lookAt(boxCFrame.Position, boxCFrame.Position + forward)
+	body.PivotOffset = body.CFrame:ToObjectSpace(pivot)
+
+	-- Scale to its height, but keep it small enough for its pedestal.
+	local _, size = model:GetBoundingBox()
+	if size.Y > 0 then
+		local scale = math.min(
+			(look.Height or DEFAULT_MODEL_HEIGHT) / size.Y,
+			(look.MaxLength or DEFAULT_MAX_LENGTH) / size.Z,
+			(look.MaxWidth or DEFAULT_MAX_WIDTH) / size.X
+		)
+		model:ScaleTo(model:GetScale() * scale)
+	end
+end
+
 -- A greybox dinosaur (or the real model if one exists), already scaled for its size.
 function Visuals.Dino(record, incomePerSecond: number): Model
 	local dino = Dinos.ById[record.DinoId]
@@ -123,13 +230,13 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 	local template = modelsFolder and modelsFolder:FindFirstChild(record.DinoId)
 
 	local model: Model
-	if template and template:IsA("Model") and template.PrimaryPart then
+	if
+		template
+		and template:IsA("Model")
+		and (template.PrimaryPart or template:FindFirstChild("Body", true))
+	then
 		model = template:Clone()
-		for _, d in model:GetDescendants() do
-			if d:IsA("BasePart") then
-				d.Anchored = true
-			end
-		end
+		prepareImportedModel(model, dino, DinoLooks[record.DinoId] or {})
 	else
 		model = Instance.new("Model")
 		local color = dino and dino.Color or Color3.new(0.5, 0.5, 0.5)
@@ -156,27 +263,30 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 
 	if mutation and mutation.Id ~= "None" then
 		for _, d in model:GetDescendants() do
-			if d:IsA("BasePart") and not string.find(d.Name, "Eye") then
+			if d:IsA("BasePart") and not isFacePart(d.Name) then
 				d.Color = mutation.Color
 				d.Material = mutation.Material
 			end
 		end
 	end
 
-	-- Babies: small body, big head, pink glow.
+	-- Babies: small body, big head, pink glow. Everything named Head* or Eye*
+	-- grows around the head's centre, so eyes, horns and teeth stay in place.
 	if record.Baby then
-		local head = model:FindFirstChild("Head")
+		local head = model:FindFirstChild("Head", true)
 		if head and head:IsA("BasePart") then
-			local body = model.PrimaryPart :: BasePart
-			local offset = body.CFrame:ToObjectSpace(head.CFrame)
-			head.Size *= 1.6
-			head.CFrame = body.CFrame * (offset + Vector3.new(0, 0.6, 0.4))
-		end
-		for _, name in { "EyeL", "EyeR" } do
-			local eye = model:FindFirstChild(name)
-			if eye and eye:IsA("BasePart") then
-				eye.Size *= 2
-				eye.CFrame += Vector3.new(0, 0.6, -0.6)
+			local headHeight = head.Size.Y
+			local centre = head.Position
+			for _, d in model:GetDescendants() do
+				if
+					d:IsA("BasePart")
+					and (string.sub(d.Name, 1, 4) == "Head" or string.sub(d.Name, 1, 3) == "Eye")
+				then
+					local rotation = d.CFrame - d.Position
+					local position = centre + (d.Position - centre) * BABY_HEAD_GROWTH
+					d.Size *= BABY_HEAD_GROWTH
+					d.CFrame = CFrame.new(position + Vector3.new(0, headHeight * 0.25, 0)) * rotation
+				end
 			end
 		end
 		local glow = Instance.new("Highlight")

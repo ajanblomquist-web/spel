@@ -3,6 +3,7 @@
 -- Dinos with a Zone only hatch from eggs dug in that zone (a reason to reach it).
 -- To use a real model instead of the greybox block, put a Model named after
 -- the dino Id (e.g. "Velociraptor") in ReplicatedStorage > DinoModels.
+-- How those models are coloured and sized lives in Config/DinoLooks.luau.
 
 local Dinos = {}
 
