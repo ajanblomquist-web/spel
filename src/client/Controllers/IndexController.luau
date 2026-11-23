@@ -1,5 +1,7 @@
 -- IndexController.luau
--- The Dino Index button and panel. One section per rarity page, one row per
+-- The Dino Index button and panel. A tab per rarity page along the top; each
+-- page splits into dinos found everywhere and one section per zone with its
+-- own dinos. One row per
 -- dino, one box per variant (lit when you've hatched it). Dinos you haven't
 -- found yet show as "???", and the Secret page is hidden until you find one. A "NEW" badge shows on the button when you've
 -- ticked boxes since you last looked.
@@ -23,10 +25,17 @@ local button: TextButton
 local badge: TextLabel
 local panel: Frame
 local list: ScrollingFrame
+local tabBar: Frame
+local selected: string? = nil -- rarity id of the open page
 
 local entries = {} -- { [dinoId] = { [variantId] = true } }
 local pagesDone = {} -- { [rarityId] = true }
 local lastSeenCount: number? = nil
+
+local render: () -> ()
+
+-- Short tab names so seven tabs fit on a phone.
+local TAB_NAMES = { Uncommon = "Uncom.", Legendary = "Legend." }
 
 local BOX_OFF = Color3.fromRGB(55, 50, 68)
 
@@ -141,9 +150,6 @@ local function dinoRow(order: number, dino)
 	local row = entries[dino.Id] or {}
 	local known = row.Found == true
 	local title = if known then dino.Name else "???"
-	if dino.Zone then
-		title ..= "  (" .. zoneName(dino.Zone) .. " only)"
-	end
 	local frame = UI.Make("Frame", {
 		LayoutOrder = order,
 		Size = UDim2.new(1, -12, 0, 72),
@@ -197,21 +203,141 @@ local function dinoRow(order: number, dino)
 	end
 end
 
-local function render()
+-- A thin label that starts a group of rows ("Found everywhere", "Amber Cliffs only").
+local function subHeader(order: number, text: string)
+	UI.Label({
+		LayoutOrder = order,
+		Size = UDim2.new(1, -12, 0, 26),
+		Text = text,
+		TextColor3 = Color3.fromRGB(210, 205, 225),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+		Parent = list,
+	})
+end
+
+local function pageFound(page): number
+	local found = 0
+	for _, dino in page.Dinos do
+		if entries[dino.Id] and entries[dino.Id].Found then
+			found += 1
+		end
+	end
+	return found
+end
+
+local function visiblePages()
+	local pages = {}
+	for _, page in Index.Pages do
+		if pageVisible(page) then
+			table.insert(pages, page)
+		end
+	end
+	return pages
+end
+
+-- Opens on the first page you haven't finished.
+local function defaultPage(pages): string
+	for _, page in pages do
+		if not pagesDone[page.Rarity] then
+			return page.Rarity
+		end
+	end
+	return pages[1].Rarity
+end
+
+local function renderTabs(pages)
+	for _, child in tabBar:GetChildren() do
+		if child:IsA("GuiButton") then
+			child:Destroy()
+		end
+	end
+	for i, page in pages do
+		local rarity = Eggs.RarityById[page.Rarity]
+		local done = pagesDone[page.Rarity] == true
+		local open = page.Rarity == selected
+		local tab = UI.Make("TextButton", {
+			LayoutOrder = i,
+			Size = UDim2.new(1 / #pages, -4, 1, if open then 0 else -6),
+			BackgroundColor3 = rarity.Color,
+			AutoButtonColor = true,
+			Font = UI.Font,
+			Text = (TAB_NAMES[page.Rarity] or page.Rarity) .. "\n" .. (if done
+				then "DONE"
+				else pageFound(page) .. "/" .. #page.Dinos),
+			TextScaled = true,
+			TextColor3 = Color3.new(1, 1, 1),
+			TextStrokeTransparency = 0.3,
+			ZIndex = 13,
+			Parent = tabBar,
+		}, {
+			UI.Corner(10),
+			UI.Stroke(
+				if open then 3 else 1,
+				if open then Color3.new(1, 1, 1) else Color3.fromRGB(30, 25, 40)
+			),
+			UI.Make("UIPadding", {
+				PaddingTop = UDim.new(0, 4),
+				PaddingBottom = UDim.new(0, 4),
+				PaddingLeft = UDim.new(0, 3),
+				PaddingRight = UDim.new(0, 3),
+			}),
+		})
+		tab.Activated:Connect(function()
+			selected = page.Rarity
+			list.CanvasPosition = Vector2.zero
+			render()
+		end)
+	end
+end
+
+function render()
 	if not list then
 		return
 	end
 	clearList()
+	local pages = visiblePages()
+	local page
+	for _, p in pages do
+		if p.Rarity == selected then
+			page = p
+		end
+	end
+	if not page then
+		selected = defaultPage(pages)
+		return render()
+	end
+	renderTabs(pages)
+
 	local order = 1
 	header(order)
-	for _, page in Index.Pages do
-		if pageVisible(page) then
+	order += 1
+	pageHeader(order, page)
+
+	-- Dinos found everywhere first, then a section per zone with its own dinos.
+	local groups, zoneOrder = { [""] = {} }, {}
+	for _, dino in page.Dinos do
+		local key = dino.Zone or ""
+		if not groups[key] then
+			groups[key] = {}
+			table.insert(zoneOrder, key)
+		end
+		table.insert(groups[key], dino)
+	end
+	if #groups[""] > 0 then
+		order += 1
+		subHeader(order, "Found everywhere")
+		for _, dino in groups[""] do
 			order += 1
-			pageHeader(order, page)
-			for _, dino in page.Dinos do
-				order += 1
-				dinoRow(order, dino)
-			end
+			dinoRow(order, dino)
+		end
+	end
+	for _, zoneId in zoneOrder do
+		order += 1
+		subHeader(order, zoneName(zoneId) .. " only")
+		for _, dino in groups[zoneId] do
+			order += 1
+			dinoRow(order, dino)
 		end
 	end
 end
@@ -249,6 +375,23 @@ local function build()
 	}, { UI.Corner(10), UI.Stroke(2) })
 
 	panel, list = UI.BuildPanel("IndexPanel", "Dino Index")
+	-- Rarity tabs between the title and the list.
+	list.Position = UDim2.fromOffset(14, 130)
+	list.Size = UDim2.new(1, -28, 1, -144)
+	tabBar = UI.Make("Frame", {
+		Position = UDim2.fromOffset(14, 68),
+		Size = UDim2.new(1, -28, 0, 56),
+		BackgroundTransparency = 1,
+		ZIndex = 12,
+		Parent = panel,
+	}, {
+		UI.Make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Bottom,
+			Padding = UDim.new(0, 4),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
 	button.Activated:Connect(function()
 		UI.TogglePanel(panel)
 		if panel.Visible then
