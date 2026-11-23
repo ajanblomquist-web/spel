@@ -1,11 +1,11 @@
 # Studio place files (the source of truth is src/)
 *.rbxl
-*.rbxl.lock
 *.rbxlx
+*.rbxl.lock
 *.rbxlx.lock
 *.rbxm
-.DS_Store
-Packages/
-__pycache__/
-roblox.yml
 sourcemap.json
+roblox.yml
+Packages/
+.DS_Store
+__pycache__/
