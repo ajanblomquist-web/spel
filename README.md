@@ -110,7 +110,7 @@ Now press **Play**.
 
 ## What's in milestone 3 so far (first 7 days: collection)
 
-- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 8 boxes per row: Dino, Gold, Lava, Ice, Crystal, Rainbow, Huge (Colossal) and Baby. 19 dinos x 8 = 152 boxes. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
+- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 4 boxes per row: Dino, Gold, Rainbow and Baby. 19 dinos x 4 = 76 boxes. The Secret page stays hidden until you hatch a Secret dino. Mutations are just Gold (2x) and Rainbow (10x, rare); size changes income but has no box. Old saves: Lava/Ice/Crystal dinos became Gold. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
 - **Page rewards**: finding every dino of a rarity pays one-time coins (500 for Common up to 20M for Secret) and gives +10% Baby odds for good.
 - **Baby dinos**: every hatch has a 1 in 500 chance to be a Baby: 3x income, small body with a big head and a pink outline, its own reveal ("IT'S A BABY!") and a server-wide shout. Never sold for Robux.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.

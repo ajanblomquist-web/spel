@@ -62,45 +62,28 @@ Eggs.Sizes = {
 	{ Id = "Colossal", Weight = 0.5, Multiplier = 5, Scale = 2.3 },
 }
 
--- Mutations multiply income and change the look.
+-- Mutations multiply income and change the look. Kept to a short ladder
+-- (normal, Gold, Rainbow) so the Dino Index stays easy to read.
 Eggs.Mutations = {
-	{ Id = "None", Weight = 90, Multiplier = 1 },
+	{ Id = "None", Weight = 92.5, Multiplier = 1 },
 	{
 		Id = "Gold",
-		Weight = 5,
+		Weight = 7,
 		Multiplier = 2,
 		Color = Color3.fromRGB(255, 200, 50),
 		Material = Enum.Material.Foil,
 	},
 	{
-		Id = "Lava",
-		Weight = 2,
-		Multiplier = 3,
-		Color = Color3.fromRGB(255, 90, 20),
-		Material = Enum.Material.Neon,
-	},
-	{
-		Id = "Frozen",
-		Weight = 2,
-		Multiplier = 3,
-		Color = Color3.fromRGB(170, 225, 255),
-		Material = Enum.Material.Ice,
-	},
-	{
-		Id = "Crystal",
-		Weight = 0.8,
-		Multiplier = 5,
-		Color = Color3.fromRGB(200, 150, 255),
-		Material = Enum.Material.Glass,
-	},
-	{
 		Id = "Rainbow",
-		Weight = 0.2,
+		Weight = 0.5,
 		Multiplier = 10,
 		Color = Color3.fromRGB(255, 120, 220),
 		Material = Enum.Material.ForceField,
 	},
 }
+
+-- Mutations that were removed, and what old saves turn them into.
+Eggs.RetiredMutations = { Lava = "Gold", Frozen = "Gold", Crystal = "Gold" }
 
 local function index(list)
 	local byId = {}

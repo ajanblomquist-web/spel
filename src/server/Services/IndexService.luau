@@ -112,8 +112,6 @@ end
 local function variantName(key: string): string
 	if key == "Found" then
 		return ""
-	elseif key == "Colossal" then
-		return "Colossal "
 	end
 	return key .. " "
 end

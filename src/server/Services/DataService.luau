@@ -14,6 +14,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
+local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local Notify = require(script.Parent.Parent.Notify)
 
 local DataService = {}
@@ -162,6 +164,21 @@ local function loadPlayer(player: Player)
 	for _, entry in data.Incubating do
 		if entry.Egg.Size == "Tiny" then
 			entry.Egg.Size = "Small"
+		end
+	end
+	-- Lava, Frozen and Crystal were removed: those dinos and eggs become Gold,
+	-- and their Index boxes (and the old Colossal box) are dropped.
+	for _, record in data.Dinos do
+		record.Mutation = Eggs.RetiredMutations[record.Mutation] or record.Mutation
+	end
+	for _, entry in data.Incubating do
+		entry.Egg.Mutation = Eggs.RetiredMutations[entry.Egg.Mutation] or entry.Egg.Mutation
+	end
+	for _, row in data.Index do
+		for key in row do
+			if not Index.VariantById[key] then
+				row[key] = nil
+			end
 		end
 	end
 
