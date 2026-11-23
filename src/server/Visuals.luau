@@ -5,6 +5,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local DinoLooks = require(ReplicatedStorage.Shared.Config.DinoLooks)
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
@@ -114,6 +115,8 @@ Visuals.DinoDisplayName = dinoDisplayName
 
 local BABY_HEAD_GROWTH = 1.6
 local DEFAULT_MODEL_HEIGHT = 6 -- studs, same as the greybox dino
+local DEFAULT_MAX_LENGTH = 11 -- pedestal rows are 7.5 studs apart; a bit of overlap is fine
+local DEFAULT_MAX_WIDTH = 5.5 -- pedestals are 6 studs apart
 local CREAM = Color3.fromRGB(245, 236, 215)
 local EYE_COLOR = Color3.fromRGB(25, 20, 28)
 local FACE_COLORS = { -- parts that keep their colour on Gold/Rainbow dinos too
@@ -135,44 +138,54 @@ local function isFacePart(partName: string): boolean
 	return false
 end
 
--- The colour of an imported model's part, from its name (see tools/blender/dino_maker.py).
-local function partColor(partName: string, dino): Color3?
-	local base = dino and dino.Color or Color3.fromRGB(150, 150, 150)
+-- The role of an imported model's part, from its name (see tools/blender/dino_maker.py):
+-- "HeadBelly" -> "Belly", "EyeShineL" -> "EyeShine", "Accent" -> "Accent".
+local function partRole(partName: string): string
 	local role = if string.sub(partName, 1, 4) == "Head" and #partName > 4
 		then string.sub(partName, 5)
 		else partName
 	if string.sub(role, 1, 8) == "EyeShine" then
-		return Color3.new(1, 1, 1)
+		return "EyeShine"
 	elseif string.sub(role, 1, 3) == "Eye" then
+		return "Eye"
+	end
+	return role
+end
+
+-- The colour of an imported model's part, or nil to keep its imported colour.
+local function partColor(role: string, dino, look: DinoLooks.Look): Color3?
+	local base = look.Color or (dino and dino.Color) or Color3.fromRGB(150, 150, 150)
+	if role == "EyeShine" then
+		return Color3.new(1, 1, 1)
+	elseif role == "Eye" then
 		return EYE_COLOR
 	elseif role == "Body" or role == "Head" then
 		return base
 	elseif role == "Belly" then
-		return dino and dino.Belly or base:Lerp(CREAM, 0.65)
+		return look.Belly or base:Lerp(CREAM, 0.65)
 	elseif role == "Accent" then
-		return dino and dino.Accent or base:Lerp(Color3.new(0, 0, 0), 0.35)
+		return look.Accent or base:Lerp(Color3.new(0, 0, 0), 0.35)
 	elseif role == "Pattern" then
-		return dino and dino.Pattern or base:Lerp(Color3.new(0, 0, 0), 0.25)
+		return look.Pattern or base:Lerp(Color3.new(0, 0, 0), 0.25)
 	elseif role == "Bone" then
 		return CREAM
-	elseif FACE_COLORS[role] then
-		return FACE_COLORS[role]
 	end
-	return nil -- unknown part: keep whatever colour it was imported with
+	return FACE_COLORS[role]
 end
 
 -- Colours, sizes and turns a model imported from Blender so it acts like the greybox:
 -- PrimaryPart is "Body", it faces -Z (head in front) and stands DEFAULT_MODEL_HEIGHT tall.
-local function prepareImportedModel(model: Model, dino)
+local function prepareImportedModel(model: Model, dino, look: DinoLooks.Look)
 	local body = (model.PrimaryPart or model:FindFirstChild("Body", true)) :: BasePart
 	model.PrimaryPart = body
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
-			local color = partColor(d.Name, dino)
+			local role = partRole(d.Name)
+			local color = partColor(role, dino, look)
 			if color then
 				d.Color = color
-				d.Material = Enum.Material.SmoothPlastic
+				d.Material = if look.Glow == role then Enum.Material.Neon else Enum.Material.SmoothPlastic
 				local surface = d:FindFirstChildOfClass("SurfaceAppearance")
 				if surface then
 					surface:Destroy() -- so the colour above shows
@@ -194,10 +207,15 @@ local function prepareImportedModel(model: Model, dino)
 	local pivot = CFrame.lookAt(boxCFrame.Position, boxCFrame.Position + forward)
 	body.PivotOffset = body.CFrame:ToObjectSpace(pivot)
 
+	-- Scale to its height, but keep it small enough for its pedestal.
 	local _, size = model:GetBoundingBox()
-	local height = dino and dino.Height or DEFAULT_MODEL_HEIGHT
 	if size.Y > 0 then
-		model:ScaleTo(model:GetScale() * height / size.Y)
+		local scale = math.min(
+			(look.Height or DEFAULT_MODEL_HEIGHT) / size.Y,
+			(look.MaxLength or DEFAULT_MAX_LENGTH) / size.Z,
+			(look.MaxWidth or DEFAULT_MAX_WIDTH) / size.X
+		)
+		model:ScaleTo(model:GetScale() * scale)
 	end
 end
 
@@ -218,7 +236,7 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 		and (template.PrimaryPart or template:FindFirstChild("Body", true))
 	then
 		model = template:Clone()
-		prepareImportedModel(model, dino)
+		prepareImportedModel(model, dino, DinoLooks[record.DinoId] or {})
 	else
 		model = Instance.new("Model")
 		local color = dino and dino.Color or Color3.new(0.5, 0.5, 0.5)
