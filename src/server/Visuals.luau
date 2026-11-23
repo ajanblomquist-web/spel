@@ -116,6 +116,24 @@ local BABY_HEAD_GROWTH = 1.6
 local DEFAULT_MODEL_HEIGHT = 6 -- studs, same as the greybox dino
 local CREAM = Color3.fromRGB(245, 236, 215)
 local EYE_COLOR = Color3.fromRGB(25, 20, 28)
+local FACE_COLORS = { -- parts that keep their colour on Gold/Rainbow dinos too
+	Mouth = Color3.fromRGB(120, 30, 45),
+	Nostril = Color3.fromRGB(120, 30, 45),
+	Tongue = Color3.fromRGB(240, 110, 130),
+	Cheek = Color3.fromRGB(255, 140, 150),
+}
+
+local function isFacePart(partName: string): boolean
+	if string.find(partName, "Eye") then
+		return true
+	end
+	for key in FACE_COLORS do
+		if string.find(partName, key) then
+			return true
+		end
+	end
+	return false
+end
 
 -- The colour of an imported model's part, from its name (see tools/blender/dino_maker.py).
 local function partColor(partName: string, dino): Color3?
@@ -133,8 +151,12 @@ local function partColor(partName: string, dino): Color3?
 		return dino and dino.Belly or base:Lerp(CREAM, 0.65)
 	elseif role == "Accent" then
 		return dino and dino.Accent or base:Lerp(Color3.new(0, 0, 0), 0.35)
+	elseif role == "Pattern" then
+		return dino and dino.Pattern or base:Lerp(Color3.new(0, 0, 0), 0.25)
 	elseif role == "Bone" then
 		return CREAM
+	elseif FACE_COLORS[role] then
+		return FACE_COLORS[role]
 	end
 	return nil -- unknown part: keep whatever colour it was imported with
 end
@@ -223,7 +245,7 @@ function Visuals.Dino(record, incomePerSecond: number): Model
 
 	if mutation and mutation.Id ~= "None" then
 		for _, d in model:GetDescendants() do
-			if d:IsA("BasePart") and not string.find(d.Name, "Eye") then
+			if d:IsA("BasePart") and not isFacePart(d.Name) then
 				d.Color = mutation.Color
 				d.Material = mutation.Material
 			end

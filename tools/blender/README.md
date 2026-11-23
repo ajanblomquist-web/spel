@@ -1,6 +1,7 @@
 # Dino models from Blender
 
-`dino_maker.py` builds cute, chunky, low-poly dinos from code and saves each as an
+`dino_maker.py` builds cute, chunky cartoon dinos from code (open smiling mouth with teeth
+and tongue, sparkly eyes, blush, belly plates, stripes and spots, toes and claws) and saves each as an
 FBX file you import into Studio. Right now it knows one dino, the T. rex, as a
 test of the look. Once the look is right, the rest get added to the same script.
 
@@ -36,10 +37,12 @@ size variants all come from this one model automatically.
 
 ## How the game uses the model
 
-- Each mesh is named by its job (`Body`, `Head`, `Belly`, `Accent`, `Bone`,
-  `EyeL`, `EyeShineL` ...). The game paints them with the dino's `Color`,
-  `Belly` and `Accent` from `src/shared/Config/Dinos.luau`, so changing a colour
-  there needs no new export.
+- Each mesh is named by its job (`Body`, `Head`, `Belly`, `Accent`, `Pattern`,
+  `Bone`, `HeadMouth`, `HeadTongue`, `HeadCheek`, `HeadNostril`, `EyeL`,
+  `EyeShineL` ...). The game paints them with the dino's `Color`, `Belly`,
+  `Accent` and `Pattern` from `src/shared/Config/Dinos.luau`, so changing a
+  colour there needs no new export. Eyes, mouth, tongue and cheeks keep their
+  colours on Gold and Rainbow dinos.
 - The game scales the model to the dino's `Height` (6 studs if not set), and
   turns it so the head faces the front, so the export size and direction don't
   matter.

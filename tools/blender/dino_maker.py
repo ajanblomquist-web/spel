@@ -14,9 +14,13 @@ src/shared/Config/Dinos.luau, so the Blender colours are only a preview:
   Body, Head            main colour      (Head is separate so Baby dinos get big heads)
   Belly, HeadBelly      lighter colour
   Accent, HeadAccent    spikes, plates, stripes (darker colour)
+  Pattern               stripes and spots (a darker main colour)
   Bone, HeadBone        claws, teeth, horns (cream)
+  HeadMouth             inside of the mouth and nostrils (dark red)
+  HeadTongue            tongue (pink)
+  HeadCheek             blush on the cheeks (pink)
   EyeL, EyeR            eyes (stay dark, even on Gold/Rainbow)
-  EyeShineL, EyeShineR  the white sparkle in each eye
+  EyeShineL, EyeShineR  the white sparkles in each eye
 Anything whose name starts with "Head" or "Eye" grows with the head on Baby dinos.
 
 Units: 1 Blender unit is about 1 stud. The game rescales each model to its
@@ -35,10 +39,10 @@ DINOS_TO_BUILD = ["TRex"]
 
 OUTPUT_FOLDER = os.path.join(os.path.expanduser("~"), "Desktop", "DinoModels")
 
-# Lower = more triangles. 0.16 keeps a whole dino around 2-3k triangles (fine on phones).
-BLOB_RESOLUTION = 0.18
+# Lower = more triangles and smoother shapes. Parts can set their own.
+BLOB_RESOLUTION = 0.15
 # After the blobs are turned into meshes, keep this share of the triangles.
-DECIMATE_RATIO = 0.35
+DECIMATE_RATIO = 0.4
 
 # Preview colours in Blender (0-255, like Color3.fromRGB). Keep them in step
 # with Color / Belly / Accent in Dinos.luau so Blender shows the in-game look.
@@ -46,6 +50,9 @@ FIXED_COLOURS = {
     "Bone": (245, 236, 215),
     "Eye": (25, 20, 28),
     "EyeShine": (255, 255, 255),
+    "Mouth": (120, 30, 45),
+    "Tongue": (240, 110, 130),
+    "Cheek": (255, 140, 150),
 }
 
 
@@ -57,16 +64,33 @@ FIXED_COLOURS = {
 class Part:
     """Collects shapes for one named mesh (one MeshPart in Roblox)."""
 
-    def __init__(self, name, role):
+    def __init__(self, name, role, resolution=None, smooth=None):
         self.name = name
         self.role = role
-        self.blobs = []  # (centre, radii, rotation) - melted together smoothly
-        self.solids = []  # bmesh-building functions - hard shapes like spikes
+        self.resolution = resolution or BLOB_RESOLUTION
+        self.smooth = smooth
+        self.blobs = []  # (centre, radii, rotation, carve) - melted together smoothly
+        self.solids = []  # hard shapes like spikes, claws and plates
+        self.decals = []  # shapes stuck onto another part's surface
 
     def blob(self, co, radii, rot=(0, 0, 0)):
         if isinstance(radii, (int, float)):
             radii = (radii, radii, radii)
-        self.blobs.append((Vector(co), Vector(radii), Euler([math.radians(a) for a in rot])))
+        self.blobs.append((Vector(co), Vector(radii), Euler([math.radians(a) for a in rot]), False))
+        return self
+
+    def carve(self, co, radii, rot=(0, 0, 0)):
+        """Scoops a blob-shaped hole out of this part's blobs (e.g. an open mouth)."""
+        if isinstance(radii, (int, float)):
+            radii = (radii, radii, radii)
+        self.blobs.append((Vector(co), Vector(radii), Euler([math.radians(a) for a in rot]), True))
+        return self
+
+    def decal(self, onto, start, direction, size, thickness, sink=0.45, spin=0.0, segments=8):
+        """A flat oval stuck onto the surface of part `onto`. A ray is shot from `start`
+        along `direction`; the oval sits where it hits, lying flat on the surface.
+        size is (width, height) of the oval, thickness how much it bulges out."""
+        self.decals.append((onto, Vector(start), Vector(direction).normalized(), size, thickness, sink, spin, segments))
         return self
 
     def cone(self, base, tip, radius, sides=6):
@@ -121,13 +145,14 @@ def evaluated_mesh(obj, name):
 def blobs_to_mesh(part):
     """Melts the part's blobs together with metaballs, then converts to a mesh."""
     mb = bpy.data.metaballs.new("mb_" + part.name)
-    mb.resolution = BLOB_RESOLUTION
-    mb.render_resolution = BLOB_RESOLUTION
+    mb.resolution = part.resolution
+    mb.render_resolution = part.resolution
     mb.threshold = 0.6
     mb_obj = bpy.data.objects.new("mb_" + part.name, mb)
     bpy.context.scene.collection.objects.link(mb_obj)
-    for co, radii, rot in part.blobs:
+    for co, radii, rot, carve in part.blobs:
         el = mb.elements.new(type="ELLIPSOID")
+        el.use_negative = carve
         el.co = co
         # A lone element of radius r and size s reaches about 0.574 * r * s.
         biggest = max(radii)
@@ -176,9 +201,52 @@ def solids_to_bmesh(part, bm):
             )
             mat = Matrix.Translation(co) @ Matrix.Diagonal((*squash, 1.0))
             bmesh.ops.transform(bm, matrix=mat, verts=res["verts"])
+        elif solid[0] == "oval":
+            _, co, rotation, radii, segments = solid
+            res = bmesh.ops.create_uvsphere(
+                bm, u_segments=segments, v_segments=max(4, segments // 2 + 1), radius=1.0,
+            )
+            mat = Matrix.Translation(co) @ rotation @ Matrix.Diagonal((*radii, 1.0))
+            bmesh.ops.transform(bm, matrix=mat, verts=res["verts"])
 
 
-def build_part(part, collection, colours):
+def place_decals(part, built):
+    """Turns the part's decals into ovals lying on the surfaces of already built parts."""
+    from mathutils.bvhtree import BVHTree
+
+    trees = {}
+    for onto, start, direction, size, thickness, sink, spin, segments in part.decals:
+        target = built.get(onto)
+        if target is None:
+            continue
+        if onto not in trees:
+            mesh = target.data.copy()
+            mesh.transform(target.matrix_world)
+            bm = bmesh.new()
+            bm.from_mesh(mesh)
+            trees[onto] = BVHTree.FromBMesh(bm)
+            bm.free()
+            bpy.data.meshes.remove(mesh)
+        hit, normal, _, _ = trees[onto].ray_cast(start, direction)
+        if hit is None:
+            print("  decal on %s missed (from %s)" % (onto, tuple(start)))
+            continue
+        normal = normal.normalized()
+        if normal.dot(direction) > 0:
+            normal = -normal
+        # Lie flat on the surface: local Z = surface normal, local Y points "up" as much as it can.
+        up = Vector((0, 0, 1)) if abs(normal.z) < 0.9 else Vector((0, 1, 0))
+        x_axis = up.cross(normal).normalized()
+        y_axis = normal.cross(x_axis).normalized()
+        rotation = Matrix((x_axis, y_axis, normal)).transposed().to_4x4()
+        rotation = rotation @ Matrix.Rotation(math.radians(spin), 4, "Z")
+        centre = hit - normal * thickness * sink
+        part.solids.append(("oval", centre, rotation, Vector((size[0] / 2, size[1] / 2, thickness)), segments))
+
+
+def build_part(part, collection, colours, built):
+    if part.decals:
+        place_decals(part, built)
     pieces = []
     if part.blobs:
         pieces.append(blobs_to_mesh(part))
@@ -214,7 +282,7 @@ def build_part(part, collection, colours):
 
     obj.data.materials.clear()
     obj.data.materials.append(material_for(part.role, colours))
-    smooth = part.role in ("Body", "Belly", "Eye", "EyeShine")
+    smooth = part.smooth if part.smooth is not None else part.role != "Bone" and part.role != "Accent"
     for poly in obj.data.polygons:
         poly.use_smooth = smooth
 
@@ -229,21 +297,26 @@ def build_part(part, collection, colours):
 # --------------------------------------------------------------------------
 
 
-def add_eyes(parts, centre, radius, shine_offset=(0.0, -0.1, 0.1)):
-    """Big shiny cartoon eyes. centre is the right eye (x > 0); the left is mirrored."""
+def add_eyes(parts, centre, radius):
+    """Big shiny cartoon eyes with two sparkles. centre is the right eye (x > 0)."""
     for side, sign in (("R", 1), ("L", -1)):
         c = Vector((centre[0] * sign, centre[1], centre[2]))
-        parts["Eye" + side] = Part("Eye" + side, "Eye").ball(c, radius, segments=12)
-        s = c + Vector((shine_offset[0] * sign + 0.25 * radius * sign, shine_offset[1] - 0.75 * radius, shine_offset[2] + 0.2 * radius))
-        parts["EyeShine" + side] = Part("EyeShine" + side, "EyeShine").ball(s, radius * 0.32, segments=8)
+        parts["Eye" + side] = Part("Eye" + side, "Eye").ball(c, radius, squash=(1, 0.8, 1.1), segments=16)
+        shine = Part("EyeShine" + side, "EyeShine")
+        # Both sparkles sit on the front-top of the eye, towards the outside.
+        big = c + Vector((0.2 * radius * sign, -0.72 * radius, 0.38 * radius))
+        small = c + Vector((-0.25 * radius * sign, -0.78 * radius, -0.3 * radius))
+        shine.ball(big, radius * 0.3, segments=10)
+        shine.ball(small, radius * 0.15, segments=8)
+        parts["EyeShine" + side] = shine
 
 
 def spine_spikes(part, points, sizes, lean=0.35):
-    """Little spikes along the back. points: list of (y, z) on the centre line."""
+    """Chunky spikes along the back. points: list of (y, z) on the centre line."""
     for (y, z), size in zip(points, sizes):
         base = Vector((0, y, z))
         tip = base + Vector((0, lean * size, size))
-        part.cone(base - Vector((0, 0, size * 0.35)), tip, size * 0.55, sides=5)
+        part.cone(base - Vector((0, 0, size * 0.4)), tip, size * 0.55, sides=6)
 
 
 # --------------------------------------------------------------------------
@@ -252,64 +325,108 @@ def spine_spikes(part, points, sizes, lean=0.35):
 
 
 def build_trex():
-    """Chibi T. rex: giant head, tiny arms, chunky legs, stubby tail."""
+    """Chibi T. rex: giant smiling head, tiny arms, chunky legs, striped back."""
     P = {}
+
+    # ---- Body: torso, tail, legs, arms (one smooth skin) ----
     body = P["Body"] = Part("Body", "Body")
-    # Torso: pear shape leaning forward.
-    body.blob((0, 0.4, 2.55), (1.35, 1.55, 1.35), rot=(-15, 0, 0))
-    body.blob((0, -0.55, 3.35), (0.95, 0.9, 1.0))  # chest/neck
-    # Tail: a short curve getting thinner.
-    body.blob((0, 1.85, 2.45), (0.85, 1.0, 0.8))
-    body.blob((0, 2.85, 2.2), (0.6, 0.85, 0.55))
-    body.blob((0, 3.7, 2.05), (0.42, 0.65, 0.4))
-    body.blob((0, 4.45, 2.05), (0.26, 0.5, 0.26), rot=(-10, 0, 0))
-    # Legs: big thighs, short shins, flat feet.
+    body.blob((0, 0.4, 2.55), (1.35, 1.55, 1.35), rot=(-15, 0, 0))  # torso
+    body.blob((0, -0.55, 3.35), (0.95, 0.9, 1.0))  # chest
+    body.blob((0, -0.9, 4.0), (0.75, 0.7, 0.7))  # neck
+    # Tail: a curve that lifts a little at the tip.
+    for y, z, r in ((1.85, 2.45, 0.85), (2.8, 2.2, 0.62), (3.65, 2.08, 0.45), (4.4, 2.1, 0.3), (5.0, 2.22, 0.18)):
+        body.blob((0, y, z), (r, r * 1.25, r * 0.95))
     for sign in (1, -1):
-        body.blob((0.95 * sign, 0.55, 1.75), (0.6, 0.85, 0.8))
-        body.blob((0.95 * sign, 0.45, 0.85), (0.42, 0.45, 0.55))
-        body.blob((0.95 * sign, 0.05, 0.25), (0.5, 0.75, 0.28))
-        # Tiny arms.
-        body.blob((0.75 * sign, -1.25, 2.6), (0.2, 0.42, 0.2), rot=(40, 0, 0))
+        # Leg: muscly thigh, knee, shin, ankle, foot with three toes.
+        body.blob((0.95 * sign, 0.5, 1.8), (0.62, 0.85, 0.82))
+        body.blob((1.0 * sign, 0.1, 1.25), (0.42, 0.42, 0.42))  # knee
+        body.blob((0.97 * sign, 0.45, 0.75), (0.38, 0.38, 0.5))  # shin
+        body.blob((0.97 * sign, 0.05, 0.25), (0.5, 0.65, 0.26))  # foot
+        for dx in (-0.27, 0.0, 0.27):
+            body.blob((0.97 * sign + dx, -0.6, 0.2), (0.15, 0.28, 0.17))  # toe
+        # Tiny arm: upper arm, forearm, two fingers.
+        body.blob((0.92 * sign, -1.1, 2.85), (0.22, 0.34, 0.22), rot=(30, 0, 0))
+        body.blob((0.95 * sign, -1.5, 2.6), (0.17, 0.32, 0.17), rot=(-35, 0, 0))
+        for dx in (-0.08, 0.08):
+            body.blob((0.95 * sign + dx, -1.78, 2.45), (0.09, 0.15, 0.09), rot=(-45, 0, 0))
 
-    belly = P["Belly"] = Part("Belly", "Belly")
-    belly.blob((0, -0.8, 2.35), (0.95, 0.55, 1.05), rot=(-15, 0, 0))
-    belly.blob((0, -1.15, 3.2), (0.62, 0.35, 0.6))
+    # ---- Head: skull, brows, snout and jaw with a smiling open mouth ----
+    head = P["Head"] = Part("Head", "Body", resolution=0.13)
+    head.blob((0, -1.35, 4.5), (1.25, 1.25, 1.05))  # skull
+    head.blob((0, -2.45, 4.42), (0.98, 1.0, 0.66))  # upper snout
+    head.blob((0, -2.15, 3.58), (0.88, 1.05, 0.42))  # lower jaw
+    for sign in (1, -1):
+        head.blob((0.66 * sign, -1.85, 5.2), (0.42, 0.42, 0.24), rot=(0, 15 * sign, 0))  # brow
+        head.blob((0.85 * sign, -2.0, 3.95), (0.35, 0.5, 0.35))  # cheek / corner of the smile
+    # The mouth: a wide smile scooped out between snout and jaw.
+    head.carve((0, -3.05, 3.92), (0.78, 0.7, 0.17))
 
-    head = P["Head"] = Part("Head", "Body")
-    head.blob((0, -1.35, 4.45), (1.25, 1.25, 1.05))  # skull
-    head.blob((0, -2.45, 4.25), (0.95, 0.95, 0.72))  # snout
-    head.blob((0, -2.05, 3.65), (0.85, 1.05, 0.42))  # jaw
+    mouth = P["HeadMouth"] = Part("HeadMouth", "Mouth", resolution=0.1)
+    mouth.blob((0, -2.65, 3.92), (0.72, 0.6, 0.2))
+    tongue = P["HeadTongue"] = Part("HeadTongue", "Tongue", resolution=0.08)
+    tongue.blob((0, -2.8, 3.84), (0.4, 0.42, 0.1))
+
+    hbone = P["HeadBone"] = Part("HeadBone", "Bone")
+    # Little teeth along the top lip, with two bigger fangs.
+    for x in (-0.58, -0.36, -0.13, 0.13, 0.36, 0.58):
+        y = -3.27 + x * x * 0.75
+        length = 0.22 if abs(x) == 0.36 else 0.13
+        hbone.cone((x, y, 4.06), (x, y - 0.03, 4.06 - length), 0.07 if length < 0.2 else 0.1, sides=5)
 
     hbelly = P["HeadBelly"] = Part("HeadBelly", "Belly")
-    hbelly.blob((0, -2.3, 3.5), (0.7, 0.9, 0.3))  # light chin
+    hbelly.decal("Head", (0, -2.4, 2.5), (0, -0.15, 1), (1.05, 1.35), 0.07)  # light chin
+
+    cheek = P["HeadCheek"] = Part("HeadCheek", "Cheek")
+    for sign in (1, -1):
+        cheek.decal("Head", (2.5 * sign, -2.15, 4.3), (-sign, -0.25, 0), (0.42, 0.3), 0.05)
+    nostril = P["HeadNostril"] = Part("HeadNostril", "Mouth")
+    for sign in (1, -1):
+        nostril.decal("Head", (0.22 * sign, -4.5, 5.2), (0, 1, -0.45), (0.14, 0.09), 0.04, sink=0.6)
+
+    # ---- Belly: soft segmented front ----
+    belly = P["Belly"] = Part("Belly", "Belly", resolution=0.1)
+    for y, z, w in ((-0.9, 1.9, 0.72), (-1.12, 2.32, 0.88), (-1.22, 2.75, 0.9), (-1.28, 3.18, 0.78), (-1.3, 3.6, 0.6)):
+        belly.blob((0, y, z), (w, 0.4, 0.24), rot=(-20, 0, 0))
+
+    # ---- Back stripes and side spots ----
+    pattern = P["Pattern"] = Part("Pattern", "Pattern")
+    for y in (0.3, 1.1, 1.9, 2.75, 3.6):
+        for side in (-1, 0, 1):
+            start = (side * 3.0, y, 6.0)
+            direction = (-side * 0.6, 0, -1)
+            pattern.decal("Body", start, direction, (0.9 if side == 0 else 0.7, 0.3), 0.06, sink=0.3)
+    for sign in (1, -1):
+        for y, z, size in ((0.2, 2.2, 0.32), (0.8, 2.75, 0.24), (1.3, 2.0, 0.2), (-0.3, 2.9, 0.18)):
+            pattern.decal("Body", (3 * sign, y, z), (-sign, 0, 0), (size, size * 0.8), 0.04)
+    for side in (-1, 1):
+        pattern.decal("Head", (side * 0.55, -0.8, 6.5), (side * 0.3, 0, -1), (0.5, 0.26), 0.05, sink=0.3)
+
+    # ---- Spikes, claws ----
+    accent = P["Accent"] = Part("Accent", "Accent")
+    spine_spikes(
+        accent,
+        [(-0.6, 4.55), (0.1, 3.95), (0.9, 3.85), (1.75, 3.4), (2.65, 3.0), (3.5, 2.65), (4.3, 2.5), (4.95, 2.45)],
+        [0.42, 0.5, 0.52, 0.46, 0.38, 0.3, 0.22, 0.15],
+    )
+    haccent = P["HeadAccent"] = Part("HeadAccent", "Accent")
+    spine_spikes(haccent, [(-1.9, 5.45), (-1.25, 5.62), (-0.6, 5.45)], [0.34, 0.46, 0.44])
 
     bone = P["Bone"] = Part("Bone", "Bone")
     for sign in (1, -1):
-        for dx in (-0.25, 0.0, 0.25):
-            base = Vector((0.95 * sign + dx, -0.6, 0.2))
-            bone.cone(base, base + Vector((0, -0.28, -0.05)), 0.11, sides=5)
-        hand = Vector((0.78 * sign, -1.62, 2.38))
-        bone.cone(hand, hand + Vector((0, -0.15, -0.12)), 0.07, sides=4)
+        for dx in (-0.27, 0.0, 0.27):
+            base = Vector((0.97 * sign + dx, -0.82, 0.2))
+            bone.cone(base, base + Vector((0, -0.22, -0.08)), 0.09, sides=6)
+        for dx in (-0.08, 0.08):
+            tip = Vector((0.95 * sign + dx, -1.88, 2.38))
+            bone.cone(tip, tip + Vector((0, -0.08, -0.14)), 0.06, sides=5)
 
-    hbone = P["HeadBone"] = Part("HeadBone", "Bone")
-    # Two rows of chunky teeth peeking out of the smile.
-    # Two cute fangs poking out of the top jaw.
-    for x in (-0.45, 0.45):
-        hbone.cone((x, -3.2, 4.02), (x, -3.24, 3.66), 0.13, sides=4)
-
-    accent = P["Accent"] = Part("Accent", "Accent")
-    spine_spikes(accent, [(0.0, 3.85), (0.85, 3.75), (1.75, 3.3), (2.7, 2.9), (3.55, 2.55), (4.3, 2.4)],
-                 [0.5, 0.52, 0.45, 0.36, 0.27, 0.18])
-    haccent = P["HeadAccent"] = Part("HeadAccent", "Accent")
-    spine_spikes(haccent, [(-1.75, 5.45), (-1.0, 5.45), (-0.35, 5.1)], [0.38, 0.48, 0.46])
-
-    add_eyes(P, centre=(0.78, -2.05, 4.85), radius=0.33)
+    add_eyes(P, centre=(0.76, -2.12, 4.88), radius=0.36)
     return P
 
 
 # Dino Id -> (builder, preview colours). Colours match Dinos.luau.
 BUILDERS = {
-    "TRex": (build_trex, {"Body": (95, 170, 80), "Belly": (240, 230, 170), "Accent": (240, 150, 60)}),
+    "TRex": (build_trex, {"Body": (95, 170, 80), "Belly": (240, 230, 170), "Accent": (240, 150, 60), "Pattern": (65, 130, 60)}),
 }
 
 
@@ -345,9 +462,12 @@ def build(dino_id):
     builder, colours = BUILDERS[dino_id]
     parts = builder()
     tris = 0
-    for part in parts.values():
-        obj = build_part(part, collection, colours)
+    built = {}
+    # Parts without decals first, so decals have surfaces to stick to.
+    for part in sorted(parts.values(), key=lambda p: bool(p.decals)):
+        obj = build_part(part, collection, colours, built)
         if obj:
+            built[part.name] = obj
             tris += sum(len(p.vertices) - 2 for p in obj.data.polygons)
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     path = os.path.join(OUTPUT_FOLDER, dino_id + ".fbx")
