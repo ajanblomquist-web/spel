@@ -200,6 +200,7 @@ src/
       Daily.luau          daily streak rewards
       WorldEvents.luau    server events
     Util/                 WeightedRandom, FormatNumber
+    DinoArt.luau          builds every dino from Parts (body plans by Shape in Dinos.luau), mutation recolour, baby look
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
   server/                 ServerScriptService.Server
@@ -232,7 +233,7 @@ src/
       NpcService          the Egg Thief
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
-    Visuals.luau          greybox eggs, dinos and labels
+    Visuals.luau          eggs (rarity look + sparkles), dinos (via DinoArt) and labels
   client/                 StarterPlayerScripts.Client
     Controllers/
       UIController        all screen UI
@@ -256,7 +257,7 @@ tools/
 
 ## Swapping in real art
 
-- **Dinos:** put a Model named after the dino's Id (for example `TRex`, `Velociraptor`, see `Dinos.luau`) with a PrimaryPart in **ReplicatedStorage > DinoModels**. It's used instead of the block dino automatically.
+- **Dinos:** put a Model named after the dino's Id (for example `TRex`, `Velociraptor`, see `Dinos.luau`) with a PrimaryPart in **ReplicatedStorage > DinoModels**. It's used instead of the code-built dino (`DinoArt.luau`, picked by `Shape` in `Dinos.luau`) automatically, on pedestals and in the hatch reveal. Give parts the attribute `KeepColor = true` if a Gold/Rainbow mutation should not recolour them.
 - **Eggs:** put a part named `EggModel` in ReplicatedStorage.
 - **World:** the map is built in `MapService.luau`. Keep the `TrainingRock` and `LaunchPad` parts (the code looks for them) and decorate around them.
 

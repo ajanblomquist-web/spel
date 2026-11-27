@@ -9,6 +9,7 @@
 -- off with it. The free counter is the nest lock (button shows when you're at
 -- home): 60 s of protection, then a cooldown. Fortress Gate makes it 3 min.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -270,6 +271,8 @@ function NestService.RenderPedestals(player: Player)
 		local pivotAboveBottom = model:GetPivot().Position.Y - (boxCFrame.Position.Y - boxSize.Y / 2)
 		local top = pedestal.Position + Vector3.new(0, pedestal.Size.Y / 2, 0)
 		model:PivotTo(CFrame.new(top + Vector3.new(0, pivotAboveBottom, 0)) * CFrame.Angles(0, math.pi, 0))
+
+		CollectionService:AddTag(model, "PedestalDino") -- the client gives it an idle bob
 
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.Name = "SellPrompt"
