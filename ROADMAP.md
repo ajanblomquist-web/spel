@@ -3,14 +3,13 @@
 Where Fling for Fossils stands against the design doc, and what's left to finish it. Milestones 1 to 3 (core loop, first 30 minutes, first-week collection) are built; see README.md.
 
 ## M4: The rest of the world (content)
-- Zones 5 to 9 from the design: **Volcano Rim, Frozen Tundra, Crystal Caves, Meteor Crater**, and the secret **Sky Island**. Each zone gets its own luck, look and 3 to 4 zone-only dinos.
-- Shop tiers past Meteorite / Fossil Pick so late zones are reachable, with rebirth bonuses carrying players there. Checked with `tools/curve_sim.py` out to about day 7.
-- **Speed training** (treadmill tiers): a Speed stat that makes carrying eggs home faster. It's the free counter to stealing that the design calls for.
+- Done: **Frozen Tundra** and **Volcano Rim** with 8 zone-only dinos; Volcano Rim is the end of the map for now.
+- Optional, a design call: Crystal Caves, Meteor Crater and the secret Sky Island from the design doc, and **Speed training** (treadmill tiers) as a free counter to stealing. Field speed already keeps carrying quick.
 
 ## M5: Shop and social (monetization finish)
-- Developer products: boost potions (2x Luck / Coins / Strength, 15 min), **Server Luck** (2x luck for everyone for 10 min, announced with the buyer's name), **Instant Hatch** (price scales with time left), **coin packs** sized to the player's income.
-- **Gift a pass** to another player in the server.
-- **Codes** box (codes live in Config) and a **friend boost** (+10% coins per friend in the server, capped).
+- Done: **coin packs** (5 / 10 / 24 hours of income), **Rare Egg**, **Codes** box.
+- To do: boost potions (2x Luck / Coins / Strength, 15 min), **Server Luck** (2x luck for everyone for 10 min, announced with the buyer's name), **Instant Hatch** (price scales with time left).
+- To do: **gift a pass** to another player in the server, and a **friend boost** (+10% coins per friend in the server, capped).
 - Nothing random is ever sold for Robux, so no odds disclosure or PolicyService gating is needed. Keep it that way.
 
 ## M6: Safe saving
