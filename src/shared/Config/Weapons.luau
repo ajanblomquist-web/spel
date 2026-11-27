@@ -19,7 +19,7 @@ export type Weapon = {
 	Pass: string?, -- game pass key, for Robux weapons
 	Color: Color3,
 	Material: Enum.Material,
-	Size: Vector3, -- greybox handle size (long side is Y)
+	Size: Vector3, -- Y = shaft length, X = shaft thickness (capped); the head is built by WeaponArt
 }
 
 Weapons.List = {

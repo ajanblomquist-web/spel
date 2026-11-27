@@ -237,6 +237,7 @@ src/
       NpcService          the Egg Thief
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
+    WeaponArt.luau        code-built bonk weapons (club, mace, claw, hammer, bat...); skins recolour the head
     Visuals.luau          eggs (rarity look + sparkles), dinos (via DinoArt) and labels
     WorldDecor.luau       code-built scenery: per-zone themes (THEMES, keyed by zone Id), zone gates, hub camp, plot fences, cliffs, mountains, volcano, lakes, clouds
   client/                 StarterPlayerScripts.Client

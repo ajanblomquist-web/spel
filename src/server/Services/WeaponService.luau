@@ -15,6 +15,7 @@ local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Visuals = require(script.Parent.Parent.Visuals)
+local WeaponArt = require(script.Parent.Parent.WeaponArt)
 
 local WeaponService = {}
 
@@ -118,13 +119,18 @@ local function giveTool(player: Player)
 	tool.RequiresHandle = true
 	tool:SetAttribute("BonkWeapon", weapon.Id)
 
-	-- The handle is long along Z; the grip holds it near one end, pointing up.
+	-- The handle is the shaft, long along Z; the grip holds it near one end,
+	-- pointing up. WeaponArt welds the weapon's head to the other end, and a
+	-- skin recolours only that head.
 	local length = weapon.Size.Y
+	local thickness = math.min(weapon.Size.X, 0.45)
 	local handle = Visuals.Part({
 		Name = "Handle",
-		Size = Vector3.new(weapon.Size.X, weapon.Size.Z, length),
-		Color = if skin then skin.Color else weapon.Color,
-		Material = if skin then skin.Material else weapon.Material,
+		Size = Vector3.new(thickness, thickness, length),
+		Color = weapon.Color,
+		Material = if weapon.Material == Enum.Material.Neon
+			then Enum.Material.SmoothPlastic
+			else weapon.Material,
 		Anchored = false,
 		CanCollide = false,
 		CanQuery = false,
@@ -132,6 +138,7 @@ local function giveTool(player: Player)
 		Massless = true,
 	})
 	handle.Parent = tool
+	WeaponArt.Decorate(handle, weapon.Id, length, skin)
 	tool.GripPos = Vector3.new(0, 0, -(length / 2 - 0.4))
 	tool.GripForward = Vector3.new(-1, 0, 0)
 	tool.GripRight = Vector3.new(0, 1, 0)
