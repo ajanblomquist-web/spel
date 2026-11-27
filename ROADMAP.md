@@ -10,23 +10,32 @@ Where Fling for Fossils stands against the design doc, and what's left to finish
 - Done: **coin packs** (5 / 10 / 24 hours of income), **Rare Egg**, **Codes** box.
 - Done: boost potions, **Server Luck**, **Instant Hatch** (3 sizes), PolicyService check for the Rare Egg.
 - Done: **friend boost** (+10% coins per Roblox friend in the server, up to 4).
-- To do: **gift a pass** to another player in the server.
+- Optional: **gift a pass** to another player. Roblox can't gift game passes, so it needs a second developer product per pass (16 more to set up in Creator Hub); left out for now.
 - The Rare Egg is the only paid random item (odds shown, hidden where restricted). Keep every other product fixed.
 
 ## M6: Safe saving (done)
-- Switch DataService to **ProfileStore** (session locking against item duplication). Keep DataService's public functions the same so no other service changes.
-
-## M7: Art and feel
-- Dinos, eggs and the world built in code from parts, so it looks finished without uploaded assets: a shaped model per dino species, mutation materials and glow, egg shapes per rarity.
-- Each zone dressed with its own terrain colours, rocks, plants, props and lighting / atmosphere / sky.
-- Effects: fling trail, landing burst, dig particles, hatch effects, Perfect hit, mutation sparkles.
-- UI pass: one consistent theme (colours, corner radius, strokes, fonts), icons, button feedback, readable at phone size.
-- Sound slots in Config (empty IDs by default; drop in sound IDs from the Creator Store).
+- DataService uses **ProfileStore** (s## M7: Art and feel (done, needs a Studio look)
+- Code-built dinos in 10 body shapes (`Shared/DinoArt`), egg shapes and sparkles per rarity, 3D dino on the hatch screen, idle bob on pedestals.
+- World (`WorldDecor`): themed props per zone, zone gates, a camp-style hub, canyon cliffs, mountains, a volcano, lakes and a river out to the horizon, clouds and pterosaurs.
+- Lighting (`AtmosphereService`), fling trail, landing dust, dig burst, Perfect-fling shake.
+- UI theme pass: one palette, button press feedback, panel title bars, emoji HUD, phone fit.
+- Not done: sound effects and music. Roblox only plays audio you own or that is public in the Creator Store, so pick sounds there and add their IDs.
 - Real models still drop in through `ReplicatedStorage.DinoModels` and override the code-built ones.
 
 ## M8: Launch checklist (needs the owner's Roblox account)
-- Publish, create passes and products in Creator Hub, paste the IDs into `Config/Passes.luau` and `Config/Products.luau`.
-- Fill out the Experience Questionnaire. Make the icon and thumbnails.
+1. In Studio, set **Lighting > Technology** to Future (scripts can't set it), and turn on **Game Settings > Security > Enable Studio Access to API Services** so saving works in tests.
+2. Play-test (2 players, see README "How to play-test"), checking especially:
+   - Dinos: shapes look right (Triceratops frill and horns, Parasaurolophus crest, Therizinosaurus claws, Pteranodon wings), they fit the pedestals, Gold/Rainbow/Baby look right, the bob doesn't jitter.
+   - Hatch screen: the spinning dino shows; the dark backdrop covers the whole screen on a phone-size window.
+   - World: no floating edges, props don't block landing spots, zone gate boards don't clip the flying shovel, palm/fern/tent angles look right; dirt bursts when digging.
+   - UI: buttons press and spring back, Shop/Passes/Index open with shadows, everything fits at 812x375 (Studio's device emulator).
+   - Saving: leave and rejoin keeps progress; buying Starter Pack / potions / Instant Hatch / Server Luck with "Test buy" works.
+   - Frame rate on a phone (Studio emulator first, then a real phone via a private server). If it's low, remove some clouds or mountains in `WorldDecor`.
+3. Publish, create the passes and developer products in Creator Hub (README lists them all with prices), paste the IDs into `Config/Passes.luau` and `Config/Products.luau`.
+4. Set `Social.GroupId` if you make a Roblox group.
+5. Fill out the Experience Questionnaire. Make the icon and thumbnails (a screenshot of the hub with a big dino works well).
+
+bnails.
 - Play-test pass in Studio with 2 players (see README "How to play-test").
 
 ## Next games
