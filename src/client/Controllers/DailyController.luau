@@ -48,7 +48,7 @@ local function openPopup()
 	UI.Label({
 		Position = UDim2.fromOffset(16, 8),
 		Size = UDim2.new(1, -90, 0, 40),
-		Text = if ready then "Daily reward! Day " .. streak .. " streak" else "Come back tomorrow!",
+		Text = if ready then "🎁 Daily reward! Day " .. streak .. " streak" else "🎁 Come back tomorrow!",
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 21,
 		Parent = frame,
