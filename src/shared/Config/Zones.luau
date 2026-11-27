@@ -16,6 +16,7 @@ export type Zone = {
 	EndDistance: number,
 	Luck: number, -- multiplies the chance of rarer eggs (at the start of the zone)
 	Toughness: number?,
+	Secret: boolean?, -- name hidden ("???") on signs until the player reaches it
 	Color: Color3,
 	Material: Enum.Material,
 }
@@ -76,9 +77,42 @@ local Zones: { Zone } = {
 		StartDistance = 1150,
 		EndDistance = 1450,
 		Luck = 9,
-		Toughness = 40, -- the end of the map: many hours and several rebirths
+		Toughness = 40, -- many hours and several rebirths
 		Color = Color3.fromRGB(70, 35, 30),
 		Material = Enum.Material.CrackedLava,
+	},
+	-- The far end: each one takes more rebirths. Sky Island is the secret last
+	-- zone: signs show "???" until you've landed there once.
+	{
+		Id = "CrystalCaves",
+		Name = "Crystal Caves",
+		StartDistance = 1450,
+		EndDistance = 1750,
+		Luck = 13,
+		Toughness = 60,
+		Color = Color3.fromRGB(120, 90, 190),
+		Material = Enum.Material.Slate,
+	},
+	{
+		Id = "MeteorCrater",
+		Name = "Meteor Crater",
+		StartDistance = 1750,
+		EndDistance = 2050,
+		Luck = 19,
+		Toughness = 100,
+		Color = Color3.fromRGB(60, 60, 75),
+		Material = Enum.Material.Basalt,
+	},
+	{
+		Id = "SkyIsland",
+		Name = "Sky Island",
+		StartDistance = 2050,
+		EndDistance = 2350,
+		Luck = 28,
+		Toughness = 130, -- the end of the map: about 40 hours and 7 rebirths
+		Secret = true,
+		Color = Color3.fromRGB(150, 220, 120),
+		Material = Enum.Material.Grass,
 	},
 }
 

@@ -698,6 +698,21 @@ local function themeOf(dinoId: string): string?
 	if string.sub(dinoId, 1, 5) == "Amber" then
 		return "Amber"
 	end
+	for prefix, theme in { Crystal = "Crystal", Geode = "Crystal", Prism = "Crystal", Amethyst = "Crystal" } do
+		if string.sub(dinoId, 1, #prefix) == prefix then
+			return theme
+		end
+	end
+	for _, prefix in { "Star", "Comet", "Orbit" } do
+		if string.sub(dinoId, 1, #prefix) == prefix then
+			return "Star"
+		end
+	end
+	for _, prefix in { "Cloud", "Sky", "Aurora", "Celestial" } do
+		if string.sub(dinoId, 1, #prefix) == prefix then
+			return "Sky"
+		end
+	end
 	return nil
 end
 
@@ -726,6 +741,25 @@ local function decorate(ctx: Ctx)
 				Color = Color3.fromRGB(255, 185, 50),
 				Material = Enum.Material.Glass,
 				Transparency = 0.2,
+				Keep = true,
+			})
+		elseif ctx.Theme == "Crystal" then
+			add(ctx, "CrystalGem" .. i, Vector3.new(0.5, 1.1, 0.5), spot + Vector3.new(0, 0.45, 0), nil, {
+				Color = Color3.fromRGB(200, 140, 255),
+				Material = Enum.Material.Glass,
+				Transparency = 0.15,
+				Keep = true,
+			})
+		elseif ctx.Theme == "Star" then
+			add(ctx, "StarGlow" .. i, Vector3.new(0.45, 0.45, 0.45), spot + Vector3.new(0, 0.2, 0), nil, {
+				Color = Color3.fromRGB(130, 230, 255),
+				Material = Enum.Material.Neon,
+				Keep = true,
+			})
+		elseif ctx.Theme == "Sky" then
+			add(ctx, "SkyPuff" .. i, Vector3.new(0.9, 0.5, 0.9), spot + Vector3.new(0, 0.2, 0), nil, {
+				Color = Color3.fromRGB(255, 245, 200),
+				Material = Enum.Material.Neon,
 				Keep = true,
 			})
 		end

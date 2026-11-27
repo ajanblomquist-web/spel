@@ -21,8 +21,8 @@ STRENGTH_SCALE = 3  # Balance.StrengthScale
 BASE_DISTANCE = 30  # Balance.BaseDistance
 ROCKS = [(0, 2), (150, 5), (1500, 10), (55000, 60), (400000, 180), (4000000, 600)]  # (price, strength/rep)
 SHOVELS = [(0, 1, 1), (300, 1.15, 1.1), (6000, 1.3, 1.25), (120000, 1.8, 1.6), (600000, 2.2, 2.2), (6000000, 2.7, 3)]
-ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4), (1150, 6), (1450, 9)]  # (end distance, luck)
-TOUGHNESS = [1, 1, 1, 6.5, 10, 40]  # Zones Toughness
+ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4), (1150, 6), (1450, 9), (1750, 13), (2050, 19), (2350, 28)]  # (end distance, luck)
+TOUGHNESS = [1, 1, 1, 6.5, 10, 40, 60, 100, 130]  # Zones Toughness
 
 
 def distance_for(power):

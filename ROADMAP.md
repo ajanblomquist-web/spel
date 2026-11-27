@@ -3,8 +3,8 @@
 Where Fling for Fossils stands against the design doc, and what's left to finish it. Milestones 1 to 3 (core loop, first 30 minutes, first-week collection) are built; see README.md.
 
 ## M4: The rest of the world (content)
-- Done: **Frozen Tundra** and **Volcano Rim** with 8 zone-only dinos; Volcano Rim is the end of the map for now.
-- Optional, a design call: Crystal Caves, Meteor Crater and the secret Sky Island from the design doc, and **Speed training** (treadmill tiers) as a free counter to stealing. Field speed already keeps carrying quick.
+- Done: all 9 zones from the design doc: Frozen Tundra, Volcano Rim, Crystal Caves, Meteor Crater and the secret **Sky Island** (name hidden on signs), each with 4 zone-only dinos and its own world dressing.
+- Optional, a design call: **Speed training** (treadmill tiers) as a free counter to stealing. Field speed already keeps carrying quick.
 
 ## M5: Shop and social (monetization finish)
 - Done: **coin packs** (5 / 10 / 24 hours of income), **Rare Egg**, **Codes** box.

@@ -702,6 +702,35 @@ local function mossyRock(ctx: Ctx, pos: Vector3, scale: number)
 	)
 end
 
+-- A grassy boulder floating high above the ground (Sky Island).
+local function floatingRock(ctx: Ctx, pos: Vector3, scale: number)
+	local lifted = pos + Vector3.new(0, 30 + ctx.Rng:NextNumber(0, 40), 0)
+	local main = rock(ctx, lifted, scale, Color3.fromRGB(150, 135, 120), Enum.Material.Rock)
+	make(
+		ctx.Parent,
+		"Block",
+		Vector3.new(main.Size.X * 0.95, 0.5, main.Size.Z * 0.9),
+		CFrame.new(main.Position + Vector3.new(0, main.Size.Y * 0.5, 0)),
+		Color3.fromRGB(120, 200, 100),
+		Enum.Material.Grass
+	)
+end
+
+-- A small crater: a dark ring of rocks around a glowing meteor shard.
+local function crater(ctx: Ctx, pos: Vector3, scale: number)
+	for i = 1, 6 do
+		local angle = i / 6 * math.pi * 2
+		rock(
+			ctx,
+			pos + Vector3.new(math.cos(angle), 0, math.sin(angle)) * scale * 2.2,
+			scale * 0.9,
+			Color3.fromRGB(58, 56, 66),
+			Enum.Material.Basalt
+		)
+	end
+	crystals(ctx, pos, scale * 0.6, Color3.fromRGB(110, 220, 255), Enum.Material.Neon, 0.1, true)
+end
+
 local THEMES: { [string]: Theme } = {
 	SandyPit = {
 		Backdrop = Color3.fromRGB(214, 186, 132),
@@ -873,6 +902,89 @@ local THEMES: { [string]: Theme } = {
 			},
 		},
 	},
+	CrystalCaves = {
+		Backdrop = Color3.fromRGB(70, 56, 104),
+		Patches = { Color3.fromRGB(96, 78, 140), Color3.fromRGB(66, 54, 98), Color3.fromRGB(120, 96, 170) },
+		Props = {
+			{
+				Make = crystalCluster(Color3.fromRGB(190, 120, 255), Enum.Material.Neon, 0.2, true),
+				Where = "lane",
+				Per100 = 6,
+				Scale = { 0.5, 0.9 },
+			},
+			{
+				Make = crystalCluster(Color3.fromRGB(150, 110, 240), Enum.Material.Glass, 0.25, false),
+				Where = "edge",
+				Per100 = 7,
+				Scale = { 1.6, 3 },
+			},
+			{
+				Make = rocks(Color3.fromRGB(74, 64, 96), Enum.Material.Slate),
+				Where = "edge",
+				Per100 = 5,
+				Scale = { 2, 5 },
+			},
+			{ Make = bones(Color3.fromRGB(220, 205, 240)), Where = "lane", Per100 = 3, Scale = { 0.9, 1.4 } },
+			{
+				Make = crystalCluster(Color3.fromRGB(170, 120, 250), Enum.Material.Glass, 0.3, false),
+				Where = "back",
+				Per100 = 5,
+				Scale = { 5, 9 },
+			},
+		},
+	},
+	MeteorCrater = {
+		Backdrop = Color3.fromRGB(48, 48, 58),
+		Patches = { Color3.fromRGB(62, 62, 74), Color3.fromRGB(40, 40, 50), Color3.fromRGB(78, 70, 64) },
+		Props = {
+			{ Make = crater, Where = "lane", Per100 = 3, Scale = { 0.8, 1.3 } },
+			{
+				Make = rocks(Color3.fromRGB(52, 50, 60), Enum.Material.Basalt),
+				Where = "lane",
+				Per100 = 6,
+				Scale = { 0.8, 1.6 },
+			},
+			{
+				Make = crystalCluster(Color3.fromRGB(110, 220, 255), Enum.Material.Neon, 0.1, true),
+				Where = "edge",
+				Per100 = 5,
+				Scale = { 1.2, 2.2 },
+			},
+			{
+				Make = rocks(Color3.fromRGB(44, 42, 52), Enum.Material.Basalt),
+				Where = "edge",
+				Per100 = 6,
+				Scale = { 2.5, 6 },
+			},
+			{
+				Make = towers(Color3.fromRGB(40, 40, 48), Enum.Material.Basalt),
+				Where = "back",
+				Per100 = 5,
+				Scale = { 6, 12 },
+			},
+		},
+	},
+	SkyIsland = {
+		Backdrop = Color3.fromRGB(120, 190, 100),
+		Patches = {
+			Color3.fromRGB(150, 215, 120),
+			Color3.fromRGB(110, 180, 96),
+			Color3.fromRGB(190, 225, 140),
+		},
+		Props = {
+			{ Make = flower, Where = "lane", Per100 = 9, Scale = { 0.9, 1.5 } },
+			{ Make = fern, Where = "lane", Per100 = 4, Scale = { 0.8, 1.2 } },
+			{ Make = tree, Where = "edge", Per100 = 5, Scale = { 1, 1.5 } },
+			{
+				Make = crystalCluster(Color3.fromRGB(255, 235, 150), Enum.Material.Neon, 0.15, true),
+				Where = "edge",
+				Per100 = 4,
+				Scale = { 1, 1.8 },
+			},
+			{ Make = floatingRock, Where = "edge", Per100 = 3, Scale = { 4, 8 } },
+			{ Make = floatingRock, Where = "back", Per100 = 3, Scale = { 8, 14 } },
+		},
+	},
 }
 
 -- Used for any zone without a THEMES entry: rocks in the zone's own colour.
@@ -958,7 +1070,7 @@ local function zoneGate(parent: Instance, zone: Zones.Zone, z: number, cfg: Conf
 		)
 		local boardCenter = Vector3.new(x - side * 11, 17, z)
 		signBoard(parent, CFrame.new(boardCenter), Vector3.new(20, 8.4, 1), Color3.fromRGB(86, 60, 42), {
-			{ Text = string.upper(zone.Name), Color = WHITE, Height = 0.58 },
+			{ Text = if zone.Secret then "???" else string.upper(zone.Name), Color = WHITE, Height = 0.58 },
 			{ Text = Zones.LuckText(zone), Color = Color3.fromRGB(130, 255, 150), Height = 0.3 },
 		})
 		make(
