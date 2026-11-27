@@ -71,23 +71,27 @@ local function productKeyForId(productId: number): string?
 	return nil
 end
 
--- Returns true once the product has been given (or was given before).
+-- Gives the product (once per purchase ID). Returns true only after the save
+-- that records the purchase has reached the DataStore, so a server crash can
+-- never lose a paid purchase or grant it twice.
 local function grantProduct(player: Player, key: string, purchaseId: string?): boolean
 	local data = DataService.Get(player)
 	local handler = productHandlers[key]
 	if not data or not handler then
 		return false
 	end
-	if purchaseId and data.Purchases[purchaseId] then
-		return true
-	end
-	local ok, err = pcall(handler, player, data)
-	if not ok then
-		warn("[MonetizationService] Product " .. key .. " failed: " .. tostring(err))
-		return false
+	if not (purchaseId and data.Purchases[purchaseId]) then
+		local ok, err = pcall(handler, player, data)
+		if not ok then
+			warn("[MonetizationService] Product " .. key .. " failed: " .. tostring(err))
+			return false
+		end
+		if purchaseId then
+			DataService.RecordPurchase(player, purchaseId)
+		end
 	end
 	if purchaseId then
-		data.Purchases[purchaseId] = true
+		return DataService.WaitForPurchaseSaved(player, purchaseId)
 	end
 	DataService.SaveNow(player)
 	return true

@@ -16,8 +16,7 @@ local HintService = {}
 
 local DataService, MonetizationService, BoostService
 
-type Session =
-	{ Shown: { [string]: boolean }, LastHint: number, Reps: number, Flings: number, Commons: number }
+type Session = { Shown: { [string]: boolean }, LastHint: number, Reps: number, Flings: number, Commons: number }
 local sessions: { [Player]: Session } = {}
 local lastGroupCheck: { [Player]: number } = {}
 

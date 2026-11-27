@@ -86,7 +86,7 @@ Now press **Play**.
 - Coins per second, offline income (50%, up to 8 hours) with a welcome-back popup
 - Server-wide shout when someone hatches a Legendary or better
 - All 10 game passes wired up (see below)
-- Saving with DataStores (autosave every 60 s and on leave)
+- Saving with ProfileStore: autosave every 60 s, on leave and on shutdown, session-locked so items can't be duplicated by server hopping; Robux purchases are confirmed only after they're saved
 - Mobile-first UI: one big context button (TRAIN / FLING / STOP! / LOCK NEST), large side buttons, scales to any screen
 
 ## What's in milestone 2 (first 5 and 30 minutes)
@@ -198,9 +198,10 @@ src/
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
   server/                 ServerScriptService.Server
+    Vendor/ProfileStore   saving library (don't edit; skipped by stylua and selene)
     init.server.luau      starts the services in order
     Services/
-      DataService         load / save / leaderboard
+      DataService         load / save (ProfileStore, session-locked) / leaderboard
       MonetizationService game pass ownership
       MapService          builds the greybox world and the 8 plots
       MovementService     walk speed (carrying, Speedy Boots, field speed)
@@ -256,7 +257,6 @@ tools/
 
 ## Before a public launch
 
-- Swap DataService's saving for **ProfileStore** (adds session locking so items can't be duplicated by fast server hopping).
 - Fill out the **Experience Questionnaire** in Creator Hub.
 - Nothing to switch off for testing: the `Balance.Studio` values only apply in Studio.
 

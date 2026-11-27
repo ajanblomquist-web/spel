@@ -73,7 +73,7 @@ Balance.OfflineCapSeconds = 8 * 60 * 60 -- offline income stops after 8 hours
 
 -- Saving
 Balance.AutosaveSeconds = 60
-Balance.DataStoreName = "PlayerData_v3"
+Balance.DataStoreName = "PlayerData_v4" -- v4: ProfileStore format
 
 -- Studio testing helpers. These only apply when you press Play in Studio,
 -- never in a published game.
