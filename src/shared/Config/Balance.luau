@@ -71,6 +71,10 @@ Balance.IncomeTickSeconds = 1
 Balance.OfflineRate = 0.5 -- dinos earn 50% while you are offline
 Balance.OfflineCapSeconds = 8 * 60 * 60 -- offline income stops after 8 hours
 
+-- Friend boost: +10% coins for each Roblox friend in the same server, up to 4.
+Balance.FriendBoostPerFriend = 0.1
+Balance.FriendBoostMaxFriends = 4
+
 -- Saving
 Balance.AutosaveSeconds = 60
 Balance.DataStoreName = "PlayerData_v4" -- v4: ProfileStore format

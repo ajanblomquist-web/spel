@@ -9,7 +9,8 @@ Where Fling for Fossils stands against the design doc, and what's left to finish
 ## M5: Shop and social (monetization finish)
 - Done: **coin packs** (5 / 10 / 24 hours of income), **Rare Egg**, **Codes** box.
 - Done: boost potions, **Server Luck**, **Instant Hatch** (3 sizes), PolicyService check for the Rare Egg.
-- To do: **gift a pass** to another player in the server, and a **friend boost** (+10% coins per friend in the server, capped).
+- Done: **friend boost** (+10% coins per Roblox friend in the server, up to 4).
+- To do: **gift a pass** to another player in the server.
 - The Rare Egg is the only paid random item (odds shown, hidden where restricted). Keep every other product fixed.
 
 ## M6: Safe saving (done)
