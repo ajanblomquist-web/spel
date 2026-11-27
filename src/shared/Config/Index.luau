@@ -22,12 +22,14 @@ Index.BabyScale = 0.6
 Index.BabyColor = Color3.fromRGB(255, 140, 200)
 Index.BabyLuckPerPage = 0.1 -- +10% Baby odds for each completed page
 
--- The boxes on each dino's row, in order. Short is the text inside the box.
+-- The boxes on each dino's row, in order. Short is the plain name; Icon is the
+-- emoji on the round chip in the Index panel (Found has no chip: the dino's
+-- name itself shows it).
 Index.Variants = {
-	{ Id = "Found", Short = "Dino", Color = Color3.fromRGB(120, 200, 120) },
-	{ Id = "Gold", Short = "Gold", Color = Eggs.MutationById.Gold.Color },
-	{ Id = "Rainbow", Short = "Rainbow", Color = Eggs.MutationById.Rainbow.Color },
-	{ Id = "Baby", Short = "Baby", Color = Index.BabyColor },
+	{ Id = "Found", Icon = "🦴", Short = "Dino", Color = Color3.fromRGB(120, 200, 120) },
+	{ Id = "Gold", Icon = "🥇", Short = "Gold", Color = Eggs.MutationById.Gold.Color },
+	{ Id = "Rainbow", Icon = "🌈", Short = "Rainbow", Color = Eggs.MutationById.Rainbow.Color },
+	{ Id = "Baby", Icon = "🍼", Short = "Baby", Color = Index.BabyColor },
 }
 
 -- One-time coins for completing a page (finding every dino of that rarity).

@@ -16,7 +16,7 @@
 --   Celebrate      server -> client   (kind, data) big moments: "NewZone", "Breakthrough", "Quest"
 --   ClaimGift      client -> server   claim a playtime gift (index)
 --   StudioBuyProduct client -> server Studio only: grant a developer product for testing
---   IndexSync      server -> client   (index, pagesDone) the player's whole Dino Index
+--   IndexSync      server -> client   (index, pagesDone, zonesReached) the player's whole Dino Index + reached zone ids
 --   BuyWeapon      client -> server   (weaponId) buy a coin weapon
 --   EquipWeapon    client -> server   (weaponId)
 --   EquipSkin      client -> server   (skinId or nil)
