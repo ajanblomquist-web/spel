@@ -26,6 +26,8 @@ local giftButton: TextButton
 local boostList: Frame
 local boostLabels: { [string]: TextLabel } = {}
 
+local serverLuckLabel: TextLabel
+
 local BOOST_COLORS = {
 	Luck = Color3.fromRGB(90, 200, 110),
 	Coins = Color3.fromRGB(230, 180, 40),
@@ -102,7 +104,7 @@ local function build()
 
 	boostList = UI.Make("Frame", {
 		Position = UDim2.fromOffset(104, 172),
-		Size = UDim2.fromOffset(170, 110),
+		Size = UDim2.fromOffset(170, 146),
 		BackgroundTransparency = 1,
 		Parent = gui,
 	}, { UI.Make("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }) })
@@ -121,6 +123,20 @@ local function build()
 			Parent = pill,
 		})
 	end
+	-- Server Luck (bought by someone in this server; applies to everyone)
+	local serverPill = UI.Make("Frame", {
+		LayoutOrder = 0,
+		Size = UDim2.fromOffset(170, 32),
+		BackgroundColor3 = Color3.fromRGB(150, 90, 230),
+		Visible = false,
+		Parent = boostList,
+	}, { UI.Corner(16), UI.Stroke(2) })
+	serverLuckLabel = UI.Label({
+		Position = UDim2.fromOffset(8, 3),
+		Size = UDim2.new(1, -16, 1, -6),
+		Text = "",
+		Parent = serverPill,
+	})
 end
 
 local lastIndex = nil
@@ -183,6 +199,14 @@ local function refreshTimers()
 	end
 
 	-- Boost timers
+	local serverEndsAt = Workspace:GetAttribute("ServerBoost_Luck")
+	local serverPill = serverLuckLabel.Parent :: Frame
+	if serverEndsAt and serverEndsAt > now then
+		serverPill.Visible = true
+		serverLuckLabel.Text = "SERVER 2x Luck  " .. formatTime(serverEndsAt - now)
+	else
+		serverPill.Visible = false
+	end
 	for name, label in boostLabels do
 		local endsAt = player:GetAttribute("Boost_" .. name)
 		local pill = label.Parent :: Frame

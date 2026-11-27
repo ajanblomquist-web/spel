@@ -62,11 +62,11 @@ Now press **Play**.
 
 **Testing game passes in Studio:** open **Passes** and press **Test it** on any pass to switch it on or off. This only works in Studio.
 
-**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section makes eggs hatch 10x faster in Studio, can make playtime gifts unlock sooner (`GiftTimeScale`, real timing by default), and can give you starting coins.
+**Faster testing:** in `src/shared/Config/Balance.luau`, the `Balance.Studio` section can make eggs hatch faster (`IncubationScale`) and playtime gifts unlock sooner (`GiftTimeScale`) in Studio (both use real timing by default), and can give you starting coins.
 
 **Testing the new-player experience:** a fresh account plays the tutorial. Your own save has already played, so to see it again either test with a second account, or change `Balance.DataStoreName` (for example to `PlayerData_test1`) to start from an empty save. Change it back afterwards.
 
-**Testing the Starter Pack:** it pops up once after your first hatch. In Studio its button says "Get it (test)" and grants it without Robux. Later it's also at the top of the **Passes** menu.
+**Testing the Starter Pack:** it pops up once after your first hatch. In Studio its button says "Get it (test)" and grants it without Robux. Later it's in the **Shop** under ROBUX DEALS.
 
 ---
 
@@ -86,7 +86,7 @@ Now press **Play**.
 - Coins per second, offline income (50%, up to 8 hours) with a welcome-back popup
 - Server-wide shout when someone hatches a Legendary or better
 - All 10 game passes wired up (see below)
-- Saving with DataStores (autosave every 60 s and on leave)
+- Saving with ProfileStore: autosave every 60 s, on leave and on shutdown, session-locked so items can't be duplicated by server hopping; Robux purchases are confirmed only after they're saved
 - Mobile-first UI: one big context button (TRAIN / FLING / STOP! / LOCK NEST), large side buttons, scales to any screen
 
 ## What's in milestone 2 (first 5 and 30 minutes)
@@ -110,15 +110,15 @@ Now press **Play**.
 
 ## What's in milestone 3 so far (first 7 days: collection)
 
-- **Dino Index** (left button, after the tutorial): one page per rarity, one row per dino, 8 boxes per row: Dino, Gold, Lava, Ice, Crystal, Rainbow, Huge (Colossal) and Baby. 19 dinos x 8 = 152 boxes. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
+- **Dino Index** (left button, after the tutorial): a tab per rarity with a found count or a tick (opens on the first page you haven't finished). Each page has a progress bar ("Found 5 / 9" and the page reward), dinos found everywhere, then one quiet section per zone you've reached; dinos in zones you haven't reached collapse into one "🔒 N more dinos" line, and the secret zone is never named or counted until reached. One compact row per dino: the name ("???" until found) and three round chips (Gold, Rainbow, Baby) that light up when ticked, so 4 boxes per dino counting the name. The Secret page stays hidden until you hatch a Secret dino. Mutations are just Gold (2x) and Rainbow (10x, rare); size changes income but has no box. Old saves: Lava/Ice/Crystal dinos became Gold. One hatch can tick several boxes. New boxes get a toast and a "NEW" badge on the button.
 - **Page rewards**: finding every dino of a rarity pays one-time coins (500 for Common up to 20M for Secret) and gives +10% Baby odds for good.
 - **Baby dinos**: every hatch has a 1 in 500 chance to be a Baby: 3x income, small body with a big head and a pink outline, its own reveal ("IT'S A BABY!") and a server-wide shout. Never sold for Robux.
 - **Index quests**: fill 6 boxes, complete the Uncommon page, fill 25 boxes.
 - Dinos you already own are added to your Index when you join. The "Tiny" size is now called "Small" (old saves are converted).
 - To test Babies in Studio, set `Balance.Studio.BabyChance` to e.g. 0.25.
-- **Bonk weapons**: when an egg carrier is in reach, a red **BONK!** button shows. A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
+- **Bonk weapons**: your weapon is a tool in the Roblox hotbar (press 1 or tap it). While you hold it and an egg carrier is in reach, a red **BONK!** button shows (clicking/tapping with the tool works too). A bonk knocks them over and they drop the egg; anyone can grab it (counts as a steal). Fresh steals and your first egg are protected, and you're safe at home. If nobody grabs a dropped egg in 25 s it goes back to its carrier.
 - **Weapon shop** (bottom of the Shop): Stick (free), Bone Club (5K), Tail Mace (60K), Raptor Claw (600K) for coins; Amber Hammer and Meteor Bat for Robux (only as strong as the Raptor Claw); skins for Robux that work on every weapon and change only the look. Better weapons reach further and bonk more often.
-- **Free AFK training**: standing at the training rock trains you by itself at half speed ("AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
+- **Free AFK training**: standing at the training rock without tapping trains you by itself with half-strength reps (1 Strength per tick on the Pebble rock; "AUTO TRAINING, tap for 2x!"). Auto Train makes it full speed from anywhere.
 - **Auto Fling drone**: with Auto Fling, a dino drone flies each egg straight into a free incubator, so you can AFK at the pad.
 - **Pass hints**: a small card (bottom right) suggests a pass right when it would help: pedestals full, incubators busy, just got robbed, lots of training or flinging, many Common eggs. Never during the tutorial, at most one every 5 minutes, each once per session, never for passes you own. Texts and limits are in `Config/Social.luau`.
 - **Group reward**: create a Roblox group and put its ID in `Social.GroupId`. Players who join get a one-time 15 min 2x Strength boost; a "Join our group" row sits at the top of the Passes menu until claimed, and one hint suggests it after the tutorial. With `GroupId = 0` this is all hidden.
@@ -126,6 +126,16 @@ Now press **Play**.
 - **Rebirth** (top row of the Shop, after reaching Amber Cliffs): pay coins (1M, then 3x more each time) to reset coins, Strength, rock and shovel. You keep dinos, Index, eggs, passes and weapons, and get +50% Strength, +25% coins and +10% luck forever per rebirth, a "Rebirth N" tag above your head and a Rebirths column on the player list. Numbers in `Config/Rebirth.luau`.
 - **Daily streak**: a 7-day reward track (coins, boosts, Rare egg, Epic egg on day 7) that pops up once a day after the tutorial. Missing a day starts it over. Rewards in `Config/Daily.luau`.
 - **Server events**: a 10-minute event at the start of every hour, the same on every server: Double Luck, Double Coins, Golden Hour (3x mutations), Baby Boom (5x Baby odds), Strength Surge. A banner announces it and a timer pill shows under the top bar. As the game owner (or anyone in Studio) type `/event DoubleLuck` (optionally `/event BabyBoom 30` for 30 minutes) or `/event stop` in chat; it reaches every server. Events in `Config/WorldEvents.luau`.
+- **Amber Cliffs is tough**: zones have a Toughness (Amber Cliffs 6.5), so each stud there takes 6.5x the fling power. Reaching it still takes ~25 min, but its far edge takes ~80 min, about as long as a first rebirth. Luck also rises the deeper you land in a zone (Amber Cliffs x4 at the start up to x6 at the edge), so longer flings always pay. Tuned in `Config/Zones.luau`.
+- **Two new zones past Amber Cliffs**, each with 4 dinos you can only get there:
+  - **Frozen Tundra** (850-1150m, x6 luck, Toughness 10): Snow Compy, Frost Raptor, Glacier Ankylo, Blizzard Spino. Reached around the first rebirth (~80 min in the simulator).
+  - **Volcano Rim** (1150-1450m, x9 luck, Toughness 40): Ember Raptor, Magma Stego, Inferno Spino, Volcano Titan (Mythic). Reached after about 2 rebirths (~4 h).
+  - **Crystal Caves** (1450-1750m, x13 luck, Toughness 60): Crystal Raptor, Geode Ankylo, Prism Trike, Amethyst Brachio (Mythic). Reached after 3-4 rebirths (~8-9 h).
+  - **Meteor Crater** (1750-2050m, x19 luck, Toughness 100): Star Raptor, Comet Stego, Orbit Ptero, Comet Spino (Mythic). Reached after about 6 rebirths (~24 h).
+  - **Sky Island** (2050-2350m, x28 luck, Toughness 130), the secret last zone: its signs say "???" until you land there. Cloud Compy, Sky Ptero, Aurora Parasaur (Mythic) and Celestial Rex (Secret). The long-term goal (~50 h, about 7 rebirths).
+  - Field speed: you run 3.5x speed from 150m out, so fetching eggs is quick and the hub (where thieves and bonkers wait) is the slow, risky part.
+- **Shop sections**: Codes, Rebirth, Training Rocks, Shovels, Weapons, Weapon Skins, Robux Deals (Starter Pack, Rare Egg) and Coin Packs.
+- **Codes**: type a code in the box at the top of the Shop. Each works once per player. Starting codes: `FOSSIL` (2x Luck 15 min), `RELEASE` (10 min of income, at least 1,000 coins), `DINOPOWER` (2x Strength 15 min). Add codes in `Config/Codes.luau` (rewards use the gift format; optional expiry date).
 - **Global leaderboards**: four boards next to the launch pad, shared by all servers: Top Thieves and Top Diggers (this week, reset Monday 00:00 UTC), Top Collectors (Index boxes) and Richest Nests (coins per second). In Studio without API access they show the players in your server.
 
 ## Game passes
@@ -158,9 +168,15 @@ Create these in **Creator Hub > Monetization > Developer Products** and paste th
 
 | Product | What you get | Suggested R$ |
 |---|---|---|
-| Starter Pack (one time) | 2x Coins for 30 min, a Rare egg, 1,000 coins | 99 |
+| Starter Pack (one time) | 2x Coins for 30 min, a Rare egg that always hatches the same dino (not a roll), 1,000 coins | 99 |
+| Rare Egg (Shop) | One Rare egg (dinos and odds shown on the row). Waits for a free incubator if yours are full. The only paid random item: hidden for players where Roblox restricts those (PolicyService) | 49 |
+| Instant Hatch (Shop, 3 products) | Takes up to 5 min / 30 min / all the time off every egg in your incubators. The Shop offers the smallest one that covers your longest egg, and only while an egg is incubating | 19 / 49 / 99 |
+| Server Luck (Shop) | 2x luck for everyone in the server for 10 min, on top of their own boosts; announced with the buyer's name | 199 |
+| 2x Luck / 2x Coins / 2x Strength potion (Shop) | 15 min of that boost, added to time you already have | 79 / 79 / 49 |
+| 5 / 10 / 24 hours of coins (Shop) | That many hours of your current income (at least 2,500 per hour) | 99 / 179 / 349 |
 
-Boost potions, Server Luck and Instant Hatch come in milestone 3.
+Paid purchases are only confirmed to Roblox after the save that records them has reached the DataStore.
+
 
 ---
 
@@ -176,7 +192,8 @@ src/
       Dinos.luau          which dinos hatch from each rarity and their coins/s
       Shop.luau           rocks and shovels
       Passes.luau         game pass IDs, prices and effects
-      Products.luau       developer products (Starter Pack)
+      Products.luau       developer products (Starter Pack, Rare Egg, coin packs)
+      Codes.luau          redeemable codes (add new ones here)
       Quests.luau         the quest chain (the first 5 are the tutorial)
       Gifts.luau          playtime gift times and rewards
       Index.luau          Dino Index variants, page rewards, Baby odds
@@ -186,14 +203,17 @@ src/
       Daily.luau          daily streak rewards
       WorldEvents.luau    server events
     Util/                 WeightedRandom, FormatNumber
+    DinoArt.luau          builds every dino from Parts (body plans by Shape in Dinos.luau), mutation recolour, baby look
     Meter.luau            the timing meter maths (same on client and server)
     Remotes.luau          list of every RemoteEvent
   server/                 ServerScriptService.Server
+    Vendor/ProfileStore   saving library (don't edit; skipped by stylua and selene)
     init.server.luau      starts the services in order
     Services/
-      DataService         load / save / leaderboard
+      DataService         load / save (ProfileStore, session-locked) / leaderboard
       MonetizationService game pass ownership
-      MapService          builds the greybox world and the 8 plots
+      MapService          builds the gameplay world (hub, canyon, 8 plots) and calls WorldDecor
+      AtmosphereService   lighting mood: warm afternoon sun, haze, colour grade, bloom, sun rays
       MovementService     walk speed (carrying, Speedy Boots, field speed)
       NestService         incubators, hatching, pedestals, selling, nest stealing, nest lock
       IncomeService       coins per second and offline income
@@ -212,10 +232,14 @@ src/
       BoostService        timed 2x Luck / Coins / Strength
       GiftService         playtime gifts
       StarterPackService  Starter Pack offer and reward
+      ProductService      Rare Egg and coin packs
+      CodeService         redeemable codes
       NpcService          the Egg Thief
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
-    Visuals.luau          greybox eggs, dinos and labels
+    WeaponArt.luau        code-built bonk weapons (club, mace, claw, hammer, bat...); skins recolour the head
+    Visuals.luau          eggs (rarity look + sparkles), dinos (via DinoArt) and labels
+    WorldDecor.luau       code-built scenery: per-zone themes (THEMES, keyed by zone Id), zone gates, hub camp, plot fences, cliffs, mountains, volcano, lakes, clouds
   client/                 StarterPlayerScripts.Client
     Controllers/
       UIController        all screen UI
@@ -230,6 +254,8 @@ src/
       RebirthController   Rebirth row in the Shop
       DailyController     daily streak popup
       EventController     event timer pill
+      ProductController   Codes box, Robux deals and coin packs in the Shop
+      EffectsController   dig dirt burst, drifting clouds, circling pterosaurs
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```
@@ -238,13 +264,13 @@ tools/
 
 ## Swapping in real art
 
-- **Dinos:** put a Model named after the dino's Id (for example `TRex`, `Velociraptor`, see `Dinos.luau`) with a PrimaryPart in **ReplicatedStorage > DinoModels**. It's used instead of the block dino automatically.
+- **Dinos:** put a Model named after the dino's Id (for example `TRex`, `Velociraptor`, see `Dinos.luau`) with a PrimaryPart in **ReplicatedStorage > DinoModels**. It's used instead of the code-built dino (`DinoArt.luau`, picked by `Shape` in `Dinos.luau`) automatically, on pedestals and in the hatch reveal. Give parts the attribute `KeepColor = true` if a Gold/Rainbow mutation should not recolour them.
 - **Eggs:** put a part named `EggModel` in ReplicatedStorage.
-- **World:** the map is built in `MapService.luau`. Keep the `TrainingRock` and `LaunchPad` parts (the code looks for them) and decorate around them.
+- **World:** the gameplay parts are built in `MapService.luau` and the scenery in `WorldDecor.luau` (no uploaded assets). Keep the `TrainingRock` and `LaunchPad` parts (the code looks for them) and decorate around them. A new zone in `Zones.luau` is dressed automatically; give it its own look by adding an entry (keyed by its Id) to `THEMES` in `WorldDecor.luau`.
+- **Lighting:** `AtmosphereService.luau`. `Lighting.Technology` can't be set from a script, so set it to **Future** (or ShadowMap) once in Studio's Lighting properties.
 
 ## Before a public launch
 
-- Swap DataService's saving for **ProfileStore** (adds session locking so items can't be duplicated by fast server hopping).
 - Fill out the **Experience Questionnaire** in Creator Hub.
 - Nothing to switch off for testing: the `Balance.Studio` values only apply in Studio.
 

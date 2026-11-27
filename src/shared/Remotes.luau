@@ -16,7 +16,7 @@
 --   Celebrate      server -> client   (kind, data) big moments: "NewZone", "Breakthrough", "Quest"
 --   ClaimGift      client -> server   claim a playtime gift (index)
 --   StudioBuyProduct client -> server Studio only: grant a developer product for testing
---   IndexSync      server -> client   (index, pagesDone) the player's whole Dino Index
+--   IndexSync      server -> client   (index, pagesDone, zonesReached) the player's whole Dino Index + reached zone ids
 --   BuyWeapon      client -> server   (weaponId) buy a coin weapon
 --   EquipWeapon    client -> server   (weaponId)
 --   EquipSkin      client -> server   (skinId or nil)
@@ -26,6 +26,8 @@
 --   GroupCheck     client -> server   re-check group membership after the join prompt
 --   Rebirth        client -> server   rebirth (pay coins, reset, get permanent bonuses)
 --   ClaimDaily     client -> server   claim today's login streak reward
+--   DigBurst       server -> all      (position, color) dirt burst where an egg was dug up
+--   RedeemCode     client -> server   redeem a code from the Shop's Codes box
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -53,6 +55,8 @@ local NAMES = {
 	"GroupCheck",
 	"Rebirth",
 	"ClaimDaily",
+	"DigBurst",
+	"RedeemCode",
 }
 
 local FOLDER_NAME = "Remotes"

@@ -14,6 +14,8 @@ local ORDER = {
 	"RebirthController",
 	"DailyController",
 	"EventController",
+	"ProductController",
+	"EffectsController",
 }
 
 for _, name in ORDER do

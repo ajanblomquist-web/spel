@@ -7,7 +7,9 @@
 --   data.IndexPages { [rarityId] = true }  pages whose reward was paid
 --
 -- The client gets the whole index through the IndexSync remote (it's small),
--- plus the IndexPercent and BabyLuck attributes.
+-- plus the zones the player has reached (so the Index only lists dinos they can
+-- work towards and never names a secret zone early), and the IndexPercent and
+-- BabyLuck attributes. It is sent again when a new zone is reached.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -28,6 +30,7 @@ local EventService = require(script.Parent.EventService)
 local DataService
 
 local rng = Random.new()
+local sentZones: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any -- zones in the last sync
 
 local function pagesDone(data): number
 	local count = 0
@@ -63,7 +66,12 @@ local function sync(player: Player)
 	player:SetAttribute("IndexCount", count)
 	player:SetAttribute("IndexPercent", math.floor(count / Index.TotalEntries * 100))
 	player:SetAttribute("BabyLuck", IndexService.BabyLuck(player))
-	Remotes.Get("IndexSync"):FireClient(player, data.Index, data.IndexPages)
+	local zones = {}
+	for zoneId in data.ZonesReached do
+		table.insert(zones, zoneId)
+	end
+	sentZones[player] = #zones
+	Remotes.Get("IndexSync"):FireClient(player, data.Index, data.IndexPages, zones)
 end
 
 -- Ticks the boxes for a record. Returns the variant ids that were new.
@@ -112,8 +120,6 @@ end
 local function variantName(key: string): string
 	if key == "Found" then
 		return ""
-	elseif key == "Colossal" then
-		return "Colossal "
 	end
 	return key .. " "
 end
@@ -153,6 +159,21 @@ function IndexService.Init(Services)
 		Events.Fire("IndexNew", player, #new)
 		checkPages(player, data, true)
 		sync(player)
+	end)
+
+	-- Reaching a new zone unlocks its section of the Index.
+	Events.On("Fling", function(player)
+		local data = DataService.Get(player)
+		if not data then
+			return
+		end
+		local count = 0
+		for _ in data.ZonesReached do
+			count += 1
+		end
+		if count ~= sentZones[player] then
+			sync(player)
+		end
 	end)
 end
 

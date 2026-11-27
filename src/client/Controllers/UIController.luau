@@ -26,26 +26,34 @@ local player = Players.LocalPlayer
 local UIController = {}
 UIController.AutoState = { AutoTrain = false, AutoFling = false }
 
+-- Theme: a warm "dig site" palette. Everything below uses these, so the whole game matches.
 local FONT = Enum.Font.FredokaOne
+local RADIUS = 14 -- one corner radius for cards, rows and pills
+local STROKE = 3 -- one outline thickness
+local DARK = Color3.fromRGB(38, 24, 14) -- outline colour (dark brown, softer than black)
 local COLORS = {
-	Panel = Color3.fromRGB(35, 30, 45),
-	PanelLight = Color3.fromRGB(60, 52, 75),
+	Panel = Color3.fromRGB(74, 50, 32), -- deep brown panels
+	PanelLight = Color3.fromRGB(110, 78, 50), -- rows and cards
+	PanelDark = Color3.fromRGB(52, 34, 22), -- title bars
+	Sand = Color3.fromRGB(236, 208, 150),
 	Text = Color3.new(1, 1, 1),
-	Coins = Color3.fromRGB(255, 215, 70),
-	Strength = Color3.fromRGB(255, 130, 90),
-	Green = Color3.fromRGB(70, 200, 90),
-	Orange = Color3.fromRGB(255, 150, 40),
-	Blue = Color3.fromRGB(60, 150, 255),
-	Purple = Color3.fromRGB(160, 90, 255),
-	Grey = Color3.fromRGB(110, 110, 120),
-	Red = Color3.fromRGB(235, 70, 70),
+	Outline = DARK,
+	Coins = Color3.fromRGB(255, 214, 80),
+	Strength = Color3.fromRGB(255, 140, 90),
+	Green = Color3.fromRGB(88, 170, 70), -- jungle green
+	Orange = Color3.fromRGB(240, 150, 30), -- amber
+	Blue = Color3.fromRGB(70, 160, 220), -- sky blue
+	Purple = Color3.fromRGB(150, 95, 200),
+	Grey = Color3.fromRGB(128, 112, 98),
+	Red = Color3.fromRGB(210, 70, 60),
 }
 local TOAST_COLORS = {
-	info = COLORS.PanelLight,
-	good = Color3.fromRGB(40, 150, 70),
-	bad = Color3.fromRGB(180, 50, 50),
-	epic = Color3.fromRGB(150, 70, 230),
+	info = Color3.fromRGB(96, 70, 48),
+	good = Color3.fromRGB(70, 150, 60),
+	bad = Color3.fromRGB(190, 60, 50),
+	epic = Color3.fromRGB(140, 80, 210),
 }
+local TOAST_ICONS = { info = "ℹ️", good = "✅", bad = "⚠️", epic = "🌟" }
 
 -- Small helpers ----------------------------------------------------------------
 
@@ -66,19 +74,19 @@ local function make(className: string, props: { [string]: any }, children: { Ins
 end
 
 local function corner(radius: number?): UICorner
-	return make("UICorner", { CornerRadius = UDim.new(0, radius or 14) })
+	return make("UICorner", { CornerRadius = UDim.new(0, radius or RADIUS) })
 end
 
 local function stroke(thickness: number?, color: Color3?): UIStroke
 	return make("UIStroke", {
-		Thickness = thickness or 3,
-		Color = color or Color3.new(0, 0, 0),
+		Thickness = thickness or STROKE,
+		Color = color or DARK,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	})
 end
 
 local function textStroke(): UIStroke
-	return make("UIStroke", { Thickness = 2, Color = Color3.new(0, 0, 0) })
+	return make("UIStroke", { Thickness = 2, Color = DARK })
 end
 
 local function label(props): TextLabel
@@ -96,7 +104,7 @@ end
 
 local function bigButton(props): TextButton
 	local defaults = {
-		AutoButtonColor = true,
+		AutoButtonColor = false,
 		Font = FONT,
 		TextColor3 = COLORS.Text,
 		TextScaled = true,
@@ -107,7 +115,7 @@ local function bigButton(props): TextButton
 	end
 	local button = make("TextButton", defaults, {
 		corner(16),
-		stroke(3),
+		stroke(STROKE),
 		make("UIPadding", {
 			PaddingTop = UDim.new(0, 8),
 			PaddingBottom = UDim.new(0, 8),
@@ -115,13 +123,43 @@ local function bigButton(props): TextButton
 			PaddingRight = UDim.new(0, 8),
 		}),
 		make("UITextSizeConstraint", { MaxTextSize = 40 }),
+		-- Phone-friendly minimum touch size.
+		make("UISizeConstraint", { MinSize = Vector2.new(46, 46) }),
+		-- Light on top, a little darker below: gives the button some depth.
+		make("UIGradient", {
+			Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(205, 205, 205)),
+			Rotation = 90,
+		}),
+		-- A darker bottom edge, like a button standing on the screen.
+		make("Frame", {
+			Name = "Edge",
+			AnchorPoint = Vector2.new(0.5, 1),
+			Position = UDim2.new(0.5, 0, 1, 6),
+			Size = UDim2.new(1, 12, 0, 6),
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = 0.75,
+			BorderSizePixel = 0,
+			Active = false,
+			ZIndex = (props.ZIndex or 1) + 1,
+		}, { corner(8) }),
 	})
-	-- Text stroke via a child UIStroke would outline the border, so use TextStroke.
-	button.TextStrokeTransparency = 0.4
-	button.Activated:Connect(function()
-		local scale = button:FindFirstChildOfClass("UIScale") or make("UIScale", { Parent = button })
-		scale.Scale = 0.92
-		TweenService:Create(scale, TweenInfo.new(0.15, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	button.TextStrokeColor3 = DARK
+	button.TextStrokeTransparency = 0.3
+	-- Press feedback: shrink while held, spring back on release. The shop button's
+	-- attention pulse shares this UIScale.
+	local scale = make("UIScale", { Name = "Press", Parent = button })
+	local function tweenScale(target: number, time: number, style: Enum.EasingStyle)
+		TweenService:Create(scale, TweenInfo.new(time, style, Enum.EasingDirection.Out), { Scale = target })
+			:Play()
+	end
+	button.MouseButton1Down:Connect(function()
+		tweenScale(0.93, 0.07, Enum.EasingStyle.Quad)
+	end)
+	button.MouseButton1Up:Connect(function()
+		tweenScale(1, 0.18, Enum.EasingStyle.Back)
+	end)
+	button.MouseLeave:Connect(function()
+		tweenScale(1, 0.12, Enum.EasingStyle.Quad)
 	end)
 	return button
 end
@@ -152,7 +190,14 @@ local function updateScale()
 	end
 	local viewport = camera.ViewportSize
 	-- Designed at 420px tall (a phone in landscape). Bigger screens scale up a bit.
-	uiScale.Scale = math.clamp(math.min(viewport.X / 760, viewport.Y / 420), 0.7, 1.6)
+	uiScale.Scale = math.clamp(math.min(viewport.X / 760, viewport.Y / 420), 0.5, 1.6)
+end
+
+local function pillShade(): UIGradient
+	return make("UIGradient", {
+		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(190, 190, 190)),
+		Rotation = 90,
+	})
 end
 
 local function buildTopBar()
@@ -177,14 +222,14 @@ local function buildTopBar()
 		LayoutOrder = 1,
 		Size = UDim2.fromOffset(230, 54),
 		BackgroundColor3 = COLORS.Panel,
-		BackgroundTransparency = 0.15,
+		BackgroundTransparency = 0.1,
 		Parent = bar,
-	}, { corner(27), stroke(3) })
+	}, { corner(27), stroke(STROKE), pillShade() })
 	coinsLabel = label({
 		Size = UDim2.new(1, -16, 0.66, 0),
 		Position = UDim2.fromOffset(8, 2),
 		TextColor3 = COLORS.Coins,
-		Text = "Coins 0",
+		Text = "🪙 0",
 		Parent = coinsPill,
 	})
 	incomeLabel = label({
@@ -199,14 +244,14 @@ local function buildTopBar()
 		LayoutOrder = 2,
 		Size = UDim2.fromOffset(150, 54),
 		BackgroundColor3 = COLORS.Panel,
-		BackgroundTransparency = 0.15,
+		BackgroundTransparency = 0.1,
 		Parent = bar,
-	}, { corner(27), stroke(3) })
+	}, { corner(27), stroke(STROKE), pillShade() })
 	strengthLabel = label({
 		Size = UDim2.new(1, -16, 1, -12),
 		Position = UDim2.fromOffset(8, 6),
 		TextColor3 = COLORS.Strength,
-		Text = "Str 0",
+		Text = "💪 0",
 		Parent = strengthPill,
 	})
 
@@ -237,7 +282,7 @@ end
 local function refreshFieldSpeed()
 	local field = player:GetAttribute("FieldSpeed") or 1
 	speedLabel.Visible = field >= 1.1
-	speedLabel.Text = string.format("Speed x%.1f", field)
+	speedLabel.Text = string.format("💨 Speed x%.1f", field)
 	local camera = Workspace.CurrentCamera
 	if camera then
 		local fov = 70 + (field - 1) * 8
@@ -246,9 +291,16 @@ local function refreshFieldSpeed()
 end
 
 local function refreshStats()
-	coinsLabel.Text = "Coins " .. FormatNumber(math.floor(player:GetAttribute("Coins") or 0))
-	incomeLabel.Text = "+" .. FormatNumber(player:GetAttribute("IncomePerSec") or 0) .. "/s"
-	strengthLabel.Text = "Str " .. FormatNumber(player:GetAttribute("Strength") or 0)
+	coinsLabel.Text = "🪙 " .. FormatNumber(math.floor(player:GetAttribute("Coins") or 0))
+	local text = "⏱ +" .. FormatNumber(player:GetAttribute("IncomePerSec") or 0) .. "/s"
+	local friends = player:GetAttribute("FriendsInServer") or 0
+	if friends > 0 then
+		local percent =
+			math.round(math.min(friends, Balance.FriendBoostMaxFriends) * Balance.FriendBoostPerFriend * 100)
+		text ..= "  +" .. percent .. "% 👥"
+	end
+	incomeLabel.Text = text
+	strengthLabel.Text = "💪 " .. FormatNumber(player:GetAttribute("Strength") or 0)
 end
 
 local function buildToasts()
@@ -271,18 +323,24 @@ end
 local toastCount = 0
 function UIController.Toast(text: string, kind: string?)
 	toastCount += 1
+	local toastKind = if TOAST_COLORS[kind or "info"] then kind or "info" else "info"
 	local frame = make("Frame", {
 		LayoutOrder = toastCount,
 		Size = UDim2.fromOffset(390, 44),
-		BackgroundColor3 = TOAST_COLORS[kind or "info"] or TOAST_COLORS.info,
+		BackgroundColor3 = TOAST_COLORS[toastKind],
 		Parent = toastList,
-	}, { corner(12), stroke(2) })
+	}, { corner(12), stroke(2), pillShade() })
 	local textLabel = label({
 		Size = UDim2.new(1, -20, 1, -10),
 		Position = UDim2.fromOffset(10, 5),
-		Text = text,
+		Text = TOAST_ICONS[toastKind] .. " " .. text,
 		Parent = frame,
 	})
+	-- Slide in from above with a little overshoot.
+	local slide = make("UIScale", { Scale = 0.6, Parent = frame })
+	TweenService
+		:Create(slide, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
+		:Play()
 	-- Keep at most 4 on screen.
 	local toasts = {}
 	for _, child in toastList:GetChildren() do
@@ -469,11 +527,47 @@ local function closeAllPanels()
 	end
 end
 
-local function buildPanel(name: string, title: string): (Frame, ScrollingFrame)
+local PANEL_ICONS = {
+	ShopPanel = "🛒",
+	PassesPanel = "⭐",
+	IndexPanel = "📖",
+}
+
+-- Pop-in when a panel opens (other code just sets panel.Visible), plus a soft shadow.
+local function addPanelPop(panel: Frame)
+	local pop = make("UIScale", { Name = "Pop", Parent = panel })
+	local shadowPop = make("UIScale", {})
+	local shadow = make("Frame", {
+		Name = panel.Name .. "Shadow",
+		AnchorPoint = panel.AnchorPoint,
+		Position = panel.Position + UDim2.fromOffset(0, 8),
+		Size = panel.Size,
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BackgroundTransparency = 0.6,
+		Visible = false,
+		ZIndex = panel.ZIndex - 1,
+		Parent = panel.Parent,
+	}, { corner(22), shadowPop })
+	panel:GetPropertyChangedSignal("Visible"):Connect(function()
+		shadow.Visible = panel.Visible
+		if panel.Visible then
+			pop.Scale = 0.85
+			shadowPop.Scale = 0.85
+			local info = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+			TweenService:Create(pop, info, { Scale = 1 }):Play()
+			TweenService:Create(shadowPop, info, { Scale = 1 }):Play()
+		end
+	end)
+	panel.Destroying:Connect(function()
+		shadow:Destroy()
+	end)
+end
+
+local function buildPanel(name: string, title: string, icon: string?): (Frame, ScrollingFrame)
 	local panel = make("Frame", {
 		Name = name,
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.52),
+		Position = UDim2.fromScale(0.5, 0.54),
 		Size = UDim2.fromOffset(560, 340),
 		BackgroundColor3 = COLORS.Panel,
 		Visible = false,
@@ -481,19 +575,38 @@ local function buildPanel(name: string, title: string): (Frame, ScrollingFrame)
 		Parent = gui,
 	}, { corner(20), stroke(4) })
 
+	-- Title bar: darker strip with an emoji, the title and a close button.
+	local bar = make("Frame", {
+		Name = "TitleBar",
+		Size = UDim2.new(1, 0, 0, 64),
+		BackgroundColor3 = COLORS.PanelDark,
+		ZIndex = 10,
+		Parent = panel,
+	}, { corner(20) })
+	make("Frame", { -- squares off the bar's lower corners
+		Position = UDim2.new(0, 0, 1, -20),
+		Size = UDim2.new(1, 0, 0, 20),
+		BackgroundColor3 = COLORS.PanelDark,
+		BorderSizePixel = 0,
+		ZIndex = 10,
+		Parent = bar,
+	})
 	label({
-		Position = UDim2.fromOffset(20, 10),
-		Size = UDim2.new(1, -100, 0, 42),
-		Text = title,
+		Name = "Title",
+		Position = UDim2.fromOffset(18, 10),
+		Size = UDim2.new(1, -100, 0, 44),
+		Text = (icon or PANEL_ICONS[name] or "🦴") .. " " .. title,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextColor3 = COLORS.Sand,
 		ZIndex = 11,
 		Parent = panel,
 	})
 	local close = bigButton({
+		Name = "Close",
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -10, 0, 8),
+		Position = UDim2.new(1, -10, 0, 4),
 		Size = UDim2.fromOffset(56, 56),
-		Text = "X",
+		Text = "✖",
 		BackgroundColor3 = COLORS.Red,
 		ZIndex = 11,
 		Parent = panel,
@@ -503,11 +616,12 @@ local function buildPanel(name: string, title: string): (Frame, ScrollingFrame)
 	end)
 
 	local list = make("ScrollingFrame", {
-		Position = UDim2.fromOffset(14, 72),
-		Size = UDim2.new(1, -28, 1, -86),
+		Position = UDim2.fromOffset(14, 76),
+		Size = UDim2.new(1, -28, 1, -90),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 10,
+		ScrollBarThickness = 8,
+		ScrollBarImageColor3 = COLORS.Sand,
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		CanvasSize = UDim2.new(),
 		ZIndex = 11,
@@ -515,6 +629,7 @@ local function buildPanel(name: string, title: string): (Frame, ScrollingFrame)
 	}, {
 		make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 	})
+	addPanelPop(panel)
 	return panel, list
 end
 
@@ -525,7 +640,7 @@ local function row(parent: Instance, order: number, title: string, subtitle: str
 		BackgroundColor3 = COLORS.PanelLight,
 		ZIndex = 12,
 		Parent = parent,
-	}, { corner(14) })
+	}, { corner(), stroke(2) })
 	label({
 		Position = UDim2.fromOffset(14, 6),
 		Size = UDim2.new(1, -190, 0, 34),
@@ -535,10 +650,11 @@ local function row(parent: Instance, order: number, title: string, subtitle: str
 		Parent = frame,
 	})
 	label({
+		Name = "Subtitle",
 		Position = UDim2.fromOffset(14, 42),
 		Size = UDim2.new(1, -190, 0, 24),
 		Text = subtitle,
-		TextColor3 = Color3.fromRGB(210, 210, 220),
+		TextColor3 = COLORS.Sand,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 13,
 		Parent = frame,
@@ -552,6 +668,32 @@ local function row(parent: Instance, order: number, title: string, subtitle: str
 		Parent = frame,
 	})
 	return frame, button
+end
+
+-- A coloured title bar that starts a section in a list (Shop, Passes...).
+local function sectionHeader(parent: Instance, order: number, text: string, color: Color3?): Frame
+	local frame = make("Frame", {
+		LayoutOrder = order,
+		Size = UDim2.new(1, -12, 0, 44),
+		BackgroundColor3 = color or COLORS.PanelLight,
+		ZIndex = 12,
+		Parent = parent,
+	}, { corner(), stroke(2) })
+	make("TextLabel", {
+		Position = UDim2.fromOffset(12, 4),
+		Size = UDim2.new(1, -24, 1, -8),
+		BackgroundTransparency = 1,
+		Font = FONT,
+		Text = text,
+		TextScaled = true,
+		TextColor3 = COLORS.Text,
+		TextStrokeColor3 = DARK,
+		TextStrokeTransparency = 0.3,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 13,
+		Parent = frame,
+	})
+	return frame
 end
 
 local shopRows = {} -- { { Category, Tier, Button } }
@@ -580,6 +722,13 @@ local function buildShop()
 	shopPanel, list = buildPanel("ShopPanel", "Shop")
 	local order = 0
 	local function add(category: string, items, describe)
+		order += 1
+		sectionHeader(
+			list,
+			order,
+			if category == "Rocks" then "TRAINING ROCKS" else "SHOVELS",
+			if category == "Rocks" then Color3.fromRGB(150, 100, 60) else Color3.fromRGB(60, 120, 170)
+		)
 		for tier, item in items do
 			if tier > 1 then
 				order += 1
@@ -652,14 +801,16 @@ local function refreshPasses()
 		local on = owned and UIController.AutoState[key]
 		button.BackgroundColor3 = if on then COLORS.Green elseif owned then COLORS.Grey else COLORS.Purple
 		local short = if key == "AutoTrain" then "Train" else "Fling"
-		button.Text = "Auto\n" .. short .. "\n" .. (if on then "ON" elseif owned then "OFF" else "R$")
+		button.Text = "🤖 Auto\n" .. short .. "\n" .. (if on then "ON" elseif owned then "OFF" else "R$")
 	end
 end
 
 local function buildPasses()
 	local list
 	passesPanel, list = buildPanel("PassesPanel", "Game Passes")
-	starterRow, starterButton = row(list, 0, Products.StarterPack.Name, Products.StarterPack.Description)
+	-- The Starter Pack lives in the Shop's ROBUX DEALS section (see ProductController).
+	starterRow, starterButton =
+		row(UIController.ShopList(), 901, Products.StarterPack.Name, Products.StarterPack.Description)
 	starterRow.BackgroundColor3 = Color3.fromRGB(150, 110, 20)
 	starterButton.BackgroundColor3 = COLORS.Green
 	starterButton.Activated:Connect(function()
@@ -699,7 +850,7 @@ local function refreshShopAttention()
 	shopBadge.Visible = want
 	if want then
 		task.spawn(function()
-			local scale = shopButton:FindFirstChild("Pulse") :: UIScale
+			local scale = shopButton:FindFirstChild("Press") :: UIScale
 			while shopAttention do
 				TweenService:Create(scale, TweenInfo.new(0.35, Enum.EasingStyle.Sine), { Scale = 1.12 })
 					:Play()
@@ -726,11 +877,10 @@ local function buildSideButtons()
 	shopButton = bigButton({
 		LayoutOrder = 1,
 		Size = UDim2.fromOffset(86, 86),
-		Text = "Shop",
+		Text = "🛒\nShop",
 		BackgroundColor3 = COLORS.Blue,
 		Parent = column,
 	})
-	make("UIScale", { Name = "Pulse", Parent = shopButton })
 	shopBadge = make("TextLabel", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0, 6, 0, 6),
@@ -754,7 +904,7 @@ local function buildSideButtons()
 	local passButton = bigButton({
 		LayoutOrder = 2,
 		Size = UDim2.fromOffset(86, 86),
-		Text = "Passes",
+		Text = "⭐\nPasses",
 		BackgroundColor3 = COLORS.Purple,
 		Parent = column,
 	})
@@ -807,7 +957,7 @@ function UIController.ShowOfflinePopup(coins: number, seconds: number)
 	label({
 		Position = UDim2.fromOffset(20, 14),
 		Size = UDim2.new(1, -40, 0, 46),
-		Text = "Welcome back!",
+		Text = "🌅 Welcome back!",
 		ZIndex = 21,
 		Parent = popup,
 	})
@@ -816,7 +966,7 @@ function UIController.ShowOfflinePopup(coins: number, seconds: number)
 		Size = UDim2.new(1, -40, 0, 70),
 		Text = "Your dinos earned "
 			.. FormatNumber(coins)
-			.. " coins\nwhile you were away ("
+			.. " 🪙 coins\nwhile you were away ("
 			.. formatDuration(seconds)
 			.. ")",
 		TextColor3 = COLORS.Coins,
@@ -844,12 +994,13 @@ UIController.Label = label
 UIController.Button = bigButton
 UIController.Corner = corner
 UIController.Stroke = stroke
+UIController.Radius = RADIUS
 UIController.Colors = COLORS
 UIController.Font = FONT
 
 -- A standard panel (title, X button, scrolling list) for other controllers.
-function UIController.BuildPanel(name: string, title: string): (Frame, ScrollingFrame)
-	local panel, list = buildPanel(name, title)
+function UIController.BuildPanel(name: string, title: string, icon: string?): (Frame, ScrollingFrame)
+	local panel, list = buildPanel(name, title, icon)
 	table.insert(extraPanels, panel)
 	return panel, list
 end
@@ -859,6 +1010,7 @@ function UIController.ShopList(): ScrollingFrame
 	return shopPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame
 end
 UIController.Row = row
+UIController.SectionHeader = sectionHeader
 
 function UIController.PassesList(): ScrollingFrame
 	return passesPanel:FindFirstChildOfClass("ScrollingFrame") :: ScrollingFrame
@@ -905,7 +1057,7 @@ function UIController.Start()
 	refreshFieldSpeed()
 	player:GetAttributeChangedSignal("FieldSpeed"):Connect(refreshFieldSpeed)
 	refreshPasses()
-	for _, attribute in { "Coins", "IncomePerSec", "Strength" } do
+	for _, attribute in { "Coins", "IncomePerSec", "Strength", "FriendsInServer" } do
 		player:GetAttributeChangedSignal(attribute):Connect(refreshStats)
 	end
 	for _, attribute in { "Coins", "RockTier", "ShovelTier" } do

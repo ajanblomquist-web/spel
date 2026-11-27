@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
+local DinoArt = require(ReplicatedStorage.Shared.DinoArt)
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
@@ -196,6 +197,45 @@ end
 
 -- Hatch reveal ---------------------------------------------------------------------
 
+-- A slowly spinning copy of the hatched dino, with mutation colours and baby look.
+-- Returns the ViewportFrame; the spin stops when it is destroyed.
+local function dinoViewport(parent: Instance, record): ViewportFrame
+	local viewport = Instance.new("ViewportFrame")
+	viewport.Name = "DinoView"
+	viewport.BackgroundTransparency = 1
+	viewport.ZIndex = 61
+	viewport.Parent = parent
+
+	local model = DinoArt.Get(record.DinoId)
+	DinoArt.ApplyMutation(model, record.Mutation)
+	if record.Baby then
+		DinoArt.ApplyBaby(model)
+	end
+	model.Parent = viewport
+
+	-- Centre the dino on the origin and frame its bounding sphere.
+	local boxCFrame, boxSize = model:GetBoundingBox()
+	model:PivotTo(model:GetPivot() - boxCFrame.Position)
+	local basePivot = model:GetPivot()
+	local radius = boxSize.Magnitude / 2
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 40
+	local distance = radius / math.sin(math.rad(camera.FieldOfView / 2)) * 1.05
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, radius * 0.35, distance), Vector3.zero)
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+
+	local angle = math.rad(200)
+	local connection = RunService.RenderStepped:Connect(function(dt)
+		angle += dt * 0.9
+		model:PivotTo(CFrame.Angles(0, angle, 0) * basePivot)
+	end)
+	viewport.Destroying:Connect(function()
+		connection:Disconnect()
+	end)
+	return viewport
+end
+
 local function showHatch(record, income: number, isFirst: boolean)
 	local rarity = Eggs.RarityById[record.Rarity]
 	local dino = Dinos.ById[record.DinoId]
@@ -234,11 +274,14 @@ local function showHatch(record, income: number, isFirst: boolean)
 	local card = UI.Make("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(400, 250),
+		Size = UDim2.fromOffset(600, 250),
 		BackgroundColor3 = UI.Colors.Panel,
 		ZIndex = 60,
 		Parent = root,
 	}, { UI.Corner(22), UI.Stroke(5, glowColor) })
+	local view = dinoViewport(card, record)
+	view.Position = UDim2.fromOffset(12, 20)
+	view.Size = UDim2.fromOffset(210, 210)
 	local scale = UI.Make("UIScale", { Scale = 0.1, Parent = card })
 	tween(scale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
 
@@ -277,8 +320,8 @@ local function showHatch(record, income: number, isFirst: boolean)
 	local y = 10
 	for _, line in lines do
 		UI.Label({
-			Position = UDim2.fromOffset(10, y),
-			Size = UDim2.new(1, -20, 0, line.Size),
+			Position = UDim2.fromOffset(230, y),
+			Size = UDim2.new(1, -240, 0, line.Size),
 			Text = line.Text,
 			TextColor3 = line.Color,
 			ZIndex = 61,

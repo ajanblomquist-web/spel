@@ -1,7 +1,8 @@
 -- Index.luau
 -- The Dino Index: a collection book with one row per dino and one box per
--- variant. Hatching a dino ticks every box it matches, so a Colossal Gold Baby
--- Triceratops ticks "Found", "Gold", "Colossal" and "Baby" in one go.
+-- variant: Found, Gold, Rainbow and Baby. Hatching a dino ticks every box it
+-- matches, so a Gold Baby Triceratops ticks "Found", "Gold" and "Baby" at once.
+-- Size (Small to Colossal) changes income only; it has no box.
 --
 -- Pages are rarities. Finding every dino on a page (the "Found" box) pays a
 -- one-time coin reward and permanently raises your Baby odds.
@@ -21,16 +22,14 @@ Index.BabyScale = 0.6
 Index.BabyColor = Color3.fromRGB(255, 140, 200)
 Index.BabyLuckPerPage = 0.1 -- +10% Baby odds for each completed page
 
--- The boxes on each dino's row, in order. Short is the text inside the box.
+-- The boxes on each dino's row, in order. Short is the plain name; Icon is the
+-- emoji on the round chip in the Index panel (Found has no chip: the dino's
+-- name itself shows it).
 Index.Variants = {
-	{ Id = "Found", Short = "Dino", Color = Color3.fromRGB(120, 200, 120) },
-	{ Id = "Gold", Short = "Gold", Color = Eggs.MutationById.Gold.Color },
-	{ Id = "Lava", Short = "Lava", Color = Eggs.MutationById.Lava.Color },
-	{ Id = "Frozen", Short = "Ice", Color = Eggs.MutationById.Frozen.Color },
-	{ Id = "Crystal", Short = "Crys", Color = Eggs.MutationById.Crystal.Color },
-	{ Id = "Rainbow", Short = "Rbow", Color = Eggs.MutationById.Rainbow.Color },
-	{ Id = "Colossal", Short = "Huge", Color = Color3.fromRGB(255, 170, 60) },
-	{ Id = "Baby", Short = "Baby", Color = Index.BabyColor },
+	{ Id = "Found", Icon = "🦴", Short = "Dino", Color = Color3.fromRGB(120, 200, 120) },
+	{ Id = "Gold", Icon = "🥇", Short = "Gold", Color = Eggs.MutationById.Gold.Color },
+	{ Id = "Rainbow", Icon = "🌈", Short = "Rainbow", Color = Eggs.MutationById.Rainbow.Color },
+	{ Id = "Baby", Icon = "🍼", Short = "Baby", Color = Index.BabyColor },
 }
 
 -- One-time coins for completing a page (finding every dino of that rarity).
@@ -63,11 +62,8 @@ Index.TotalEntries = #Dinos.List * #Index.Variants
 -- The variant boxes a hatched dino record ticks.
 function Index.KeysFor(record): { string }
 	local keys = { "Found" }
-	if record.Mutation and record.Mutation ~= "None" then
+	if record.Mutation == "Gold" or record.Mutation == "Rainbow" then
 		table.insert(keys, record.Mutation)
-	end
-	if record.Size == "Colossal" then
-		table.insert(keys, "Colossal")
 	end
 	if record.Baby then
 		table.insert(keys, "Baby")
@@ -75,12 +71,19 @@ function Index.KeysFor(record): { string }
 	return keys
 end
 
+Index.VariantById = {}
+for _, variant in Index.Variants do
+	Index.VariantById[variant.Id] = variant
+end
+
 -- entries: { [dinoId] = { [variantId] = true } }
 function Index.Count(entries): number
 	local count = 0
 	for _, row in entries do
-		for _ in row do
-			count += 1
+		for key in row do
+			if Index.VariantById[key] then
+				count += 1
+			end
 		end
 	end
 	return count

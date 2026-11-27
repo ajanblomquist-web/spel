@@ -9,6 +9,7 @@
 -- off with it. The free counter is the nest lock (button shows when you're at
 -- home): 60 s of protection, then a cooldown. Fortress Gate makes it 3 min.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -76,6 +77,13 @@ function NestService.RenderIncubators(player: Player)
 	end
 	local list = visualsFor(player).Eggs
 	clearList(list)
+
+	-- The Shop's Instant Hatch row reads this to pick its size and price.
+	local longest = 0
+	for _, entry in data.Incubating do
+		longest = math.max(longest, entry.ReadyAt - os.time())
+	end
+	player:SetAttribute("LongestHatchAt", if longest > 0 then Workspace:GetServerTimeNow() + longest else nil)
 
 	for i, entry in data.Incubating do
 		local nest = plot.Incubators[i]
@@ -264,6 +272,8 @@ function NestService.RenderPedestals(player: Player)
 		local top = pedestal.Position + Vector3.new(0, pedestal.Size.Y / 2, 0)
 		model:PivotTo(CFrame.new(top + Vector3.new(0, pivotAboveBottom, 0)) * CFrame.Angles(0, math.pi, 0))
 
+		CollectionService:AddTag(model, "PedestalDino") -- the client gives it an idle bob
+
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.Name = "SellPrompt"
 		prompt.ActionText = "Sell"
@@ -307,15 +317,53 @@ function NestService.TryAddEgg(player: Player, egg): boolean
 	return true
 end
 
+-- For eggs the player bought: into an incubator now, or queued until one is
+-- free (a bought egg is never lost or swapped for coins).
+-- Instant Hatch: takes up to maxSeconds off every incubating egg. Returns how
+-- many eggs it sped up. Hatching itself happens on the next hatch check.
+function NestService.SkipTime(player: Player, maxSeconds: number): number
+	local data = DataService.Get(player)
+	if not data then
+		return 0
+	end
+	local now = os.time()
+	local count = 0
+	for _, entry in data.Incubating do
+		if entry.ReadyAt > now then
+			entry.ReadyAt = math.max(now, entry.ReadyAt - maxSeconds)
+			count += 1
+		end
+	end
+	if count > 0 then
+		NestService.RenderIncubators(player)
+	end
+	return count
+end
+
+function NestService.GiveEgg(player: Player, egg)
+	if NestService.TryAddEgg(player, egg) then
+		return
+	end
+	local data = DataService.Get(player)
+	if data then
+		table.insert(data.PendingEggs, egg)
+		Notify.Player(
+			player,
+			"Your " .. egg.Rarity .. " egg goes in as soon as an incubator is free!",
+			"info"
+		)
+	end
+end
+
 local function hatch(player: Player, data, egg)
 	local record = {
 		Id = egg.Id,
-		DinoId = EggRoll.PickDino(egg.Rarity, egg.Zone),
+		DinoId = egg.DinoId or EggRoll.PickDino(egg.Rarity, egg.Zone), -- bought eggs may name their dino
 		Rarity = egg.Rarity,
 		Size = egg.Size,
 		Mutation = egg.Mutation,
 		Zone = egg.Zone,
-		Baby = if IndexService.RollBaby(player) then true else nil,
+		Baby = if not egg.DinoId and IndexService.RollBaby(player) then true else nil,
 	}
 	table.insert(data.Dinos, record)
 	data.Stats.DinosHatched += 1
@@ -368,6 +416,13 @@ local function processHatching(player: Player)
 			waiting = true
 		end
 		i += 1
+	end
+
+	-- Bought eggs waiting for a free incubator.
+	while #data.PendingEggs > 0 and #data.Incubating < Balance.IncubatorSlots do
+		local egg = table.remove(data.PendingEggs, 1)
+		NestService.TryAddEgg(player, egg)
+		Notify.Player(player, "Your " .. egg.Rarity .. " egg is in an incubator now!", "good")
 	end
 
 	if hatchedAny then

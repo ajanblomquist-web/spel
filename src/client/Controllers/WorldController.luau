@@ -5,9 +5,13 @@
 --   * counts down incubator timers
 --   * draws a guide line to your dig spot, or home while carrying an egg
 --   * the status line and the LOCK NEST button when you're at home
+--   * a gentle idle bob on pedestal dinos (tagged PedestalDino by the server;
+--     only moved on this client, only when close to the camera)
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -203,8 +207,59 @@ local function updateGuide()
 	UIController.SetStatus(status)
 end
 
+-- Idle bob for pedestal dinos ----------------------------------------------------------
+
+local BOB_RANGE = 90
+local bobbers: { [Model]: { Base: CFrame?, Phase: number, Moved: boolean } } = {}
+
+local function updateBobs()
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local cameraPos = camera.CFrame.Position
+	local now = os.clock()
+	for model, entry in bobbers do
+		local primary = model.PrimaryPart
+		if not primary then
+			continue
+		end
+		if not entry.Base then
+			entry.Base = model:GetPivot()
+		end
+		local base = entry.Base :: CFrame
+		if (base.Position - cameraPos).Magnitude > BOB_RANGE then
+			if entry.Moved then
+				model:PivotTo(base)
+				entry.Moved = false
+			end
+			continue
+		end
+		local t = now * 2 + entry.Phase
+		local lift = math.sin(t) * 0.12
+		local sway = math.sin(t * 0.5) * 0.05
+		model:PivotTo(base * CFrame.new(0, lift, 0) * CFrame.Angles(0, sway, 0))
+		entry.Moved = true
+	end
+end
+
+local function trackBobber(model: Instance)
+	if model:IsA("Model") then
+		bobbers[model] = { Base = nil, Phase = math.random() * math.pi * 2, Moved = false }
+	end
+end
+
 function WorldController.Start(Controllers)
 	UIController = Controllers.UIController
+
+	for _, model in CollectionService:GetTagged("PedestalDino") do
+		trackBobber(model)
+	end
+	CollectionService:GetInstanceAddedSignal("PedestalDino"):Connect(trackBobber)
+	CollectionService:GetInstanceRemovedSignal("PedestalDino"):Connect(function(model)
+		bobbers[model :: Model] = nil
+	end)
+	RunService.RenderStepped:Connect(updateBobs)
 
 	for _, d in Workspace:GetDescendants() do
 		if d:IsA("ProximityPrompt") then

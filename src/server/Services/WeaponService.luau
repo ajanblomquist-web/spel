@@ -1,6 +1,6 @@
 -- WeaponService.luau
--- Bonk weapons: owning, buying, equipping, the weapon in your hand, and the
--- bonk itself (see Config/Weapons).
+-- Bonk weapons: owning, buying, equipping, the weapon Tool in your hotbar,
+-- and the bonk itself (see Config/Weapons). You bonk while holding the tool.
 --
 -- Saved data: data.Weapons = { Owned = { [weaponId] = true }, Equipped, Skin }
 -- Robux weapons and skins are game passes, so they're not in Owned.
@@ -15,6 +15,7 @@ local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Visuals = require(script.Parent.Parent.Visuals)
+local WeaponArt = require(script.Parent.Parent.WeaponArt)
 
 local WeaponService = {}
 
@@ -74,47 +75,81 @@ local function publish(player: Player)
 	player:SetAttribute("WeaponSkin", skin and skin.Id or nil)
 end
 
--- Puts the equipped weapon in the character's right hand.
-local function attach(player: Player)
+-- Gives the equipped weapon as a hotbar Tool (replacing the old one). If the
+-- old one was being held, the new one is held too.
+local function isWeaponTool(instance: Instance): boolean
+	return instance:IsA("Tool") and instance:GetAttribute("BonkWeapon") ~= nil
+end
+
+function WeaponService.Holding(player: Player): boolean
 	local character = player.Character
 	if not character then
+		return false
+	end
+	for _, child in character:GetChildren() do
+		if isWeaponTool(child) then
+			return true
+		end
+	end
+	return false
+end
+
+local function giveTool(player: Player)
+	local character = player.Character
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if not character or not backpack then
 		return
 	end
-	local hand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
-	if not hand or not hand:IsA("BasePart") then
-		return
+	local wasHeld = false
+	for _, container in { backpack, character } do
+		for _, child in container:GetChildren() do
+			if isWeaponTool(child) then
+				wasHeld = wasHeld or container == character
+				child:Destroy()
+			end
+		end
 	end
-	local old = character:FindFirstChild("BonkWeapon")
-	if old then
-		old:Destroy()
-	end
+
 	local weapon = WeaponService.Equipped(player)
 	local skin = equippedSkin(player)
-	local part = Visuals.Part({
-		Name = "BonkWeapon",
-		Size = weapon.Size,
-		Color = if skin then skin.Color else weapon.Color,
-		Material = if skin then skin.Material else weapon.Material,
+	local tool = Instance.new("Tool")
+	tool.Name = weapon.Name
+	tool.ToolTip = "Bonk egg carriers!"
+	tool.CanBeDropped = false
+	tool.RequiresHandle = true
+	tool:SetAttribute("BonkWeapon", weapon.Id)
+
+	-- The handle is the shaft, long along Z; the grip holds it near one end,
+	-- pointing up. WeaponArt welds the weapon's head to the other end, and a
+	-- skin recolours only that head.
+	local length = weapon.Size.Y
+	local thickness = math.min(weapon.Size.X, 0.45)
+	local handle = Visuals.Part({
+		Name = "Handle",
+		Size = Vector3.new(thickness, thickness, length),
+		Color = weapon.Color,
+		Material = if weapon.Material == Enum.Material.Neon
+			then Enum.Material.SmoothPlastic
+			else weapon.Material,
 		Anchored = false,
 		CanCollide = false,
 		CanQuery = false,
 		CanTouch = false,
 		Massless = true,
 	})
-	-- Held like a club: handle in the hand, pointing up and forward.
-	local weld = Instance.new("Weld")
-	weld.Name = "Grip"
-	weld.Part0 = hand
-	weld.Part1 = part
-	weld.C0 = CFrame.new(0, -hand.Size.Y / 2, -0.3) * CFrame.Angles(math.rad(-90), 0, 0)
-	weld.C1 = CFrame.new(0, -weapon.Size.Y / 2 + 0.3, 0)
-	weld.Parent = part
-	part.Parent = character
+	handle.Parent = tool
+	WeaponArt.Decorate(handle, weapon.Id, length, skin)
+	tool.GripPos = Vector3.new(0, 0, -(length / 2 - 0.4))
+	tool.GripForward = Vector3.new(-1, 0, 0)
+	tool.GripRight = Vector3.new(0, 1, 0)
+	tool.GripUp = Vector3.new(0, 0, 1)
+
+	tool.Parent = if wasHeld then character else backpack
 end
 
 local function refresh(player: Player)
 	publish(player)
-	attach(player)
+	giveTool(player)
 end
 
 local function buy(player: Player, weaponId: any)
@@ -175,7 +210,7 @@ local function bonk(attacker: Player, victim: any)
 	if not a or not v or (a.Position - v.Position).Magnitude > weapon.Range + 4 then
 		return
 	end
-	if not CarryService.CanBonk(victim) then
+	if not WeaponService.Holding(attacker) or not CarryService.CanBonk(victim) then
 		return
 	end
 	lastBonk[attacker] = now
@@ -230,9 +265,9 @@ function WeaponService.Start()
 	local function onPlayer(player: Player)
 		player.CharacterAdded:Connect(function(character)
 			character:WaitForChild("Humanoid", 5)
-			character:WaitForChild("RightHand", 5)
+			player:WaitForChild("Backpack", 5)
 			if DataService.IsLoaded(player) then
-				attach(player)
+				giveTool(player)
 			end
 		end)
 	end

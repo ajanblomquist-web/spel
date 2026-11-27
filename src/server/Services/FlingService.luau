@@ -52,7 +52,7 @@ function FlingService.Distance(strength: number, shovelPower: number, timingMult
 	local raw = (Balance.BaseDistance + Balance.StrengthScale * math.sqrt(math.max(strength, 0)))
 		* shovelPower
 		* timingMultiplier
-	return math.clamp(raw, 8, Zones.MaxDistance - 6)
+	return math.clamp(Zones.DistanceFor(raw), 8, Zones.MaxDistance - 6)
 end
 
 -- Auto Fling's dino drone: digs the egg and flies it straight into a free
@@ -92,11 +92,12 @@ local function resolve(player: Player, meterValue: number, auto: boolean?)
 	local distance = FlingService.Distance(data.Strength, shovel.Power, timing)
 	local zone = Zones.ForDistance(distance)
 
-	local luck = zone.Luck * shovel.Luck
+	local luck = Zones.LuckAt(distance) * shovel.Luck
 	if MonetizationService.Has(player, "LuckyShovel") then
 		luck *= Passes.Effects.LuckMultiplier
 	end
 	luck *= BoostService.Multiplier(player, "Luck")
+	luck *= BoostService.ServerMultiplier("Luck")
 	luck *= RebirthService.Multiplier(player, "Luck")
 	luck *= EventService.Multiplier("Luck")
 

@@ -21,7 +21,33 @@ STRENGTH_SCALE = 3  # Balance.StrengthScale
 BASE_DISTANCE = 30  # Balance.BaseDistance
 ROCKS = [(0, 2), (150, 5), (1500, 10), (55000, 60), (400000, 180), (4000000, 600)]  # (price, strength/rep)
 SHOVELS = [(0, 1, 1), (300, 1.15, 1.1), (6000, 1.3, 1.25), (120000, 1.8, 1.6), (600000, 2.2, 2.2), (6000000, 2.7, 3)]
-ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4)]  # (end distance, luck)
+ZONES = [(120, 1), (300, 1.6), (550, 2.6), (850, 4), (1150, 6), (1450, 9), (1750, 13), (2050, 19), (2350, 28)]  # (end distance, luck)
+TOUGHNESS = [1, 1, 1, 6.5, 10, 40, 60, 100, 130]  # Zones Toughness
+
+
+def distance_for(power):
+    """Zones.DistanceFor: tough zones cost more fling power per stud."""
+    distance, start = 0.0, 0.0
+    for (end, _), tough in zip(ZONES, TOUGHNESS):
+        cost = (end - start) * tough
+        if power <= cost:
+            return distance + power / tough
+        power -= cost
+        distance += end - start
+        start = end
+    return distance
+
+
+def luck_at(distance):
+    """Zones.LuckAt: luck rises halfway to the next zone's across a zone."""
+    start = 0.0
+    for i, (end, luck) in enumerate(ZONES):
+        if distance < end or i == len(ZONES) - 1:
+            nxt = ZONES[i + 1][1] if i + 1 < len(ZONES) else luck * 2
+            depth = min(max((distance - start) / (end - start), 0), 1)
+            return luck + (nxt - luck) * 0.5 * depth
+        start = end
+    return 1
 # (weight, luck power, incubate seconds, average income)
 RARITIES = [(60, 0, 30, 1.1), (25, 0.5, 60, 3.3), (10, 1, 120, 8.5), (4, 1.25, 300, 27),
             (0.9, 1.5, 600, 95), (0.09, 1.75, 1200, 360), (0.01, 2, 1800, 1500)]
@@ -55,12 +81,16 @@ def run(seed, minutes=45):
     while t < minutes * 60:
         strength += TRAIN_SECONDS * TAPS_PER_SECOND * ROCKS[rock][1] * (1 + rebirths * REBIRTH_STR)
         advance(TRAIN_SECONDS + 6)
-        distance = min((BASE_DISTANCE + STRENGTH_SCALE * math.sqrt(strength)) * SHOVELS[shovel][1], ZONES[-1][0] - 6)
+        power = (BASE_DISTANCE + STRENGTH_SCALE * math.sqrt(strength)) * SHOVELS[shovel][1]
+        distance = min(distance_for(power), ZONES[-1][0] - 6)
+        if distance >= ZONES[-1][0] - 6 and "edge" not in reached:
+            reached.add("edge")
+            log.append((t / 60, "far edge"))
         zone = next(i for i, z in enumerate(ZONES) if distance < z[0])
         if zone not in reached:
             reached.add(zone)
-            log.append((t / 60, f"zone {zone + 1}"))
-        luck = ZONES[zone][1] * SHOVELS[shovel][2] * (1 + rebirths * REBIRTH_LUCK)
+            log.append((t / 60, f"zone {zone + 1}" + (f" (after {rebirths} rebirths)" if zone >= 4 else "")))
+        luck = luck_at(distance) * SHOVELS[shovel][2] * (1 + rebirths * REBIRTH_LUCK)
         if first:
             rarity, hatch, first = 2, 8, False
         else:
@@ -75,7 +105,7 @@ def run(seed, minutes=45):
             coins += bonuses.pop(0)[1]
         # Rebirth as soon as Amber Cliffs is reached and it's affordable.
         price = REBIRTH_PRICE * REBIRTH_GROWTH ** rebirths
-        if 3 in reached and coins >= price:
+        if zone >= 3 and coins >= price:
             rebirths += 1
             coins = strength = 0
             rock = shovel = 0

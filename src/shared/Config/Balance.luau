@@ -9,21 +9,24 @@ local Balance = {}
 -- Movement
 Balance.WalkSpeed = 24
 Balance.CarrySpeedMultiplier = 0.75 -- carrying an egg makes you slower
--- Field speed: the further out into the fling field you are, the faster you walk,
--- so fetching far eggs doesn't get tedious. Ramps from 1x at FieldSpeedStart studs
--- past the launch pad up to FieldSpeedMax at FieldSpeedFullAt studs and beyond.
+-- Field speed: out in the fling field you run fast, so fetching far eggs is
+-- quick and the slow, dangerous part is carrying the egg back through the hub
+-- (where thieves and bonkers are). Ramps from 1x at FieldSpeedStart studs past
+-- the launch pad up to FieldSpeedMax at FieldSpeedFullAt studs and beyond.
 -- Stacks with Speedy Boots and the carry slowdown. No effect in the hub.
-Balance.FieldSpeedStart = 40
-Balance.FieldSpeedFullAt = 600
-Balance.FieldSpeedMax = 2.25
+Balance.FieldSpeedStart = 30
+Balance.FieldSpeedFullAt = 150
+Balance.FieldSpeedMax = 3.5
 
 -- Training
 Balance.TrainCooldown = 0.3 -- seconds between reps (server enforced)
 Balance.TrainRange = 14 -- studs from the training rock
--- Free AFK training: standing at the rock trains you by itself every this many
--- seconds (half the speed of tapping). The Auto Train pass trains at full speed
+-- Free AFK training: standing at the rock without tapping trains you by itself
+-- at the tap rate, but each rep gives only this share of a normal rep (0.5 =
+-- 1 Strength per tick with the Pebble rock). The Auto Train pass gives full reps
 -- from anywhere.
-Balance.FreeAutoTrainSeconds = 0.6
+Balance.FreeAutoTrainEfficiency = 0.5
+Balance.FreeAutoTrainIdleSeconds = 1 -- free reps start after this long without tapping
 
 -- Fling
 Balance.FlingRange = 14 -- studs from the launch pad
@@ -68,9 +71,13 @@ Balance.IncomeTickSeconds = 1
 Balance.OfflineRate = 0.5 -- dinos earn 50% while you are offline
 Balance.OfflineCapSeconds = 8 * 60 * 60 -- offline income stops after 8 hours
 
+-- Friend boost: +10% coins for each Roblox friend in the same server, up to 4.
+Balance.FriendBoostPerFriend = 0.1
+Balance.FriendBoostMaxFriends = 4
+
 -- Saving
 Balance.AutosaveSeconds = 60
-Balance.DataStoreName = "PlayerData_v1"
+Balance.DataStoreName = "PlayerData_v4" -- v4: ProfileStore format
 
 -- Studio testing helpers. These only apply when you press Play in Studio,
 -- never in a published game.
@@ -86,7 +93,7 @@ Balance.ThiefWalkSpeed = 13
 Balance.ThiefRespawnSeconds = 40
 
 Balance.Studio = {
-	IncubationScale = 0.1, -- eggs hatch 10x faster while testing
+	IncubationScale = 1, -- set to 0.1 to make eggs hatch 10x faster while testing
 	StartingCoins = 0, -- set to e.g. 100000 to test the shop quickly
 	GiftTimeScale = 1, -- set to 0.1 to make playtime gifts unlock 10x sooner while testing
 	BabyChance = 0, -- set to e.g. 0.25 to hatch lots of Baby dinos while testing (0 = normal odds)

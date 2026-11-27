@@ -3,30 +3,38 @@
 -- data through this module so the leaderboard and player attributes (which the
 -- client UI reads) always stay in sync.
 --
--- Saving uses DataStoreService directly with retries, autosave and a save on
--- shutdown. Before a public launch, swap this for ProfileStore to get session
--- locking (stops item duplication if a player hops servers very fast).
+-- Saving uses ProfileStore (src/server/Vendor): it autosaves, saves on leave
+-- and on shutdown, and session-locks each save so a player hopping servers fast
+-- can't load the same save twice and duplicate items. If the same save is
+-- opened on another server, this server lets go of it and kicks the player.
 
-local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Balance = require(ReplicatedStorage.Shared.Config.Balance)
+local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
+local Index = require(ReplicatedStorage.Shared.Config.Index)
 local Notify = require(script.Parent.Parent.Notify)
+local ProfileStore = require(script.Parent.Parent.Vendor.ProfileStore)
 
 local DataService = {}
 
-type Profile = {
+type Entry = {
 	Data: any,
-	CanSave: boolean,
+	Profile: any, -- the ProfileStore profile
+	RemovingDone: boolean, -- OnRemoving callbacks have run
 }
 
-local profiles: { [Player]: Profile } = {}
+local profiles: { [Player]: Entry } = {}
 local loadedCallbacks = {}
 local removingCallbacks = {}
-local store: DataStore? = nil
+local store = nil -- the ProfileStore for player data, made in Start
+
+-- How many developer-product purchase IDs to remember per player. Roblox
+-- retries an unfinished purchase within days, so the newest ones are enough.
+local KEEP_PURCHASES = 100
 
 -- Fields that are mirrored onto the Player as attributes for the client UI.
 local REPLICATED = { "Coins", "Strength", "RockTier", "ShovelTier", "Rebirths" }
@@ -43,12 +51,15 @@ local function defaultData()
 		Steals = 0, -- eggs stolen from other players (shown on the leaderboard)
 		Dinos = {}, -- { { Id, DinoId, Rarity, Size, Mutation, Zone, Baby } }, one per pedestal
 		Incubating = {}, -- { { Egg = { Id, Rarity, Size, Mutation }, ReadyAt = unix time } }
+		Codes = {}, -- { [CODE] = true }, redeemed codes
+		PendingEggs = {}, -- bought eggs waiting for a free incubator (same shape as Egg)
 		LastOnline = 0,
 		Quest = { Index = 1, Progress = 0 }, -- position in Config/Quests
 		Boosts = {}, -- { [boostName] = unix time it ends }
 		FirstEggDone = false, -- the guaranteed Rare first egg has been given
 		ZonesReached = {}, -- { [zoneId] = true }, for NEW ZONE banners
 		Purchases = {}, -- { [purchaseId] = true }, so a developer product is never granted twice
+		PurchaseOrder = {}, -- purchase IDs oldest first, to forget the oldest past KEEP_PURCHASES
 		StarterPackBought = false,
 		StarterOfferShown = false,
 		Index = {}, -- Dino Index: { [dinoId] = { [variantId] = true } }
@@ -84,22 +95,6 @@ local function keyFor(player: Player): string
 	return "u_" .. player.UserId
 end
 
-local function withRetries(label: string, fn: () -> any, attempts: number?): (boolean, any)
-	local maxAttempts = attempts or 3
-	local ok, result
-	for attempt = 1, maxAttempts do
-		ok, result = pcall(fn)
-		if ok then
-			return true, result
-		end
-		warn(string.format("[DataService] %s failed (attempt %d): %s", label, attempt, tostring(result)))
-		if attempt < maxAttempts then
-			task.wait(2 ^ attempt)
-		end
-	end
-	return false, result
-end
-
 local function setupLeaderstats(player: Player, data)
 	local folder = Instance.new("Folder")
 	folder.Name = "leaderstats"
@@ -125,30 +120,39 @@ local function replicate(player: Player, field: string, value: any)
 	end
 end
 
-local function loadPlayer(player: Player)
-	local data
-	local canSave = true
-
-	if store then
-		local ok, result = withRetries("Load " .. player.Name, function()
-			return (store :: DataStore):GetAsync(keyFor(player))
-		end, if RunService:IsStudio() then 1 else 3)
-		if ok then
-			data = result
-		elseif RunService:IsStudio() then
-			canSave = false
-			warn("[DataService] Could not load data in Studio. Playing with fresh data that won't save.")
-		else
-			player:Kick("We couldn't load your save. Please rejoin in a moment!")
-			return
-		end
-	else
-		canSave = false
+local function runRemoving(player: Player)
+	local entry = profiles[player]
+	if not entry or entry.RemovingDone then
+		return
 	end
+	entry.RemovingDone = true
+	for _, callback in removingCallbacks do
+		local ok, err = xpcall(callback, debug.traceback, player)
+		if not ok then
+			warn("[DataService] OnRemoving callback error: " .. tostring(err))
+		end
+	end
+end
 
+local function loadPlayer(player: Player)
+	local profile = store:StartSessionAsync(keyFor(player), {
+		Cancel = function()
+			return player.Parent ~= Players
+		end,
+	})
+	if profile == nil then
+		if player.Parent == Players then
+			player:Kick("We couldn't load your save. Please rejoin in a moment!")
+		end
+		return
+	end
+	profile:AddUserId(player.UserId) -- lets Roblox data-deletion requests find this save
+	local canSave = ProfileStore.DataStoreState == "Access"
+
+	local data = profile.Data
 	-- Saves from milestone 1 have no Quest field: those players skip the tutorial.
 	local isMilestone1Save = type(data) == "table" and data.Quest == nil
-	data = reconcile(if type(data) == "table" then data else defaultData(), defaultData())
+	data = reconcile(data, defaultData())
 	if isMilestone1Save and data.Stats.EggsDug > 0 then
 		data.FirstEggDone = true
 		data.Quest.Index = 6
@@ -164,12 +168,45 @@ local function loadPlayer(player: Player)
 			entry.Egg.Size = "Small"
 		end
 	end
-
-	if player.Parent == nil then
-		return -- left while loading
+	-- Lava, Frozen and Crystal were removed: those dinos and eggs become Gold,
+	-- and their Index boxes (and the old Colossal box) are dropped.
+	for _, record in data.Dinos do
+		record.Mutation = Eggs.RetiredMutations[record.Mutation] or record.Mutation
+	end
+	for _, entry in data.Incubating do
+		entry.Egg.Mutation = Eggs.RetiredMutations[entry.Egg.Mutation] or entry.Egg.Mutation
+	end
+	for _, row in data.Index do
+		for key in row do
+			if not Index.VariantById[key] then
+				row[key] = nil
+			end
+		end
 	end
 
-	profiles[player] = { Data = data, CanSave = canSave }
+	if player.Parent ~= Players then
+		profile:EndSession() -- left while loading
+		return
+	end
+
+	profiles[player] = { Data = data, Profile = profile, RemovingDone = false }
+
+	-- Right before every save, stamp the time. Right before the last save (leaving,
+	-- shutdown, or the save opening elsewhere), let services write their state.
+	profile.OnSave:Connect(function()
+		data.LastOnline = os.time()
+	end)
+	profile.OnLastSave:Connect(function()
+		runRemoving(player)
+	end)
+	profile.OnSessionEnd:Connect(function()
+		if profiles[player] and profiles[player].Profile == profile then
+			profiles[player] = nil
+			if player.Parent == Players then
+				player:Kick("Your save was opened on another server. Please rejoin!")
+			end
+		end
+	end)
 
 	setupLeaderstats(player, data)
 	for _, field in REPLICATED do
@@ -198,32 +235,14 @@ local function loadPlayer(player: Player)
 	end
 end
 
-local function savePlayer(player: Player)
-	local profile = profiles[player]
-	if not profile or not profile.CanSave or not store then
-		return
-	end
-	profile.Data.LastOnline = os.time()
-	local data = profile.Data
-	withRetries("Save " .. player.Name, function()
-		return (store :: DataStore):UpdateAsync(keyFor(player), function()
-			return data
-		end)
-	end)
-end
-
 local function removePlayer(player: Player)
-	if not profiles[player] then
+	local entry = profiles[player]
+	if not entry then
 		return
 	end
-	for _, callback in removingCallbacks do
-		local ok, err = xpcall(callback, debug.traceback, player)
-		if not ok then
-			warn("[DataService] OnRemoving callback error: " .. tostring(err))
-		end
-	end
-	savePlayer(player)
+	runRemoving(player)
 	profiles[player] = nil
+	entry.Profile:EndSession() -- saves one last time and releases the session lock
 end
 
 -- Public API -----------------------------------------------------------------
@@ -287,9 +306,46 @@ function DataService.SpendCoins(player: Player, amount: number): boolean
 	return true
 end
 
--- Saves right away (used after Robux purchases).
+-- Saves right away (used after Robux purchases and other big moments).
 function DataService.SaveNow(player: Player)
-	task.spawn(savePlayer, player)
+	local entry = profiles[player]
+	if entry then
+		entry.Profile:Save()
+	end
+end
+
+-- Remembers a developer-product purchase ID (forgetting the oldest ones).
+function DataService.RecordPurchase(player: Player, purchaseId: string)
+	local data = DataService.Get(player)
+	if not data or data.Purchases[purchaseId] then
+		return
+	end
+	data.Purchases[purchaseId] = true
+	table.insert(data.PurchaseOrder, purchaseId)
+	while #data.PurchaseOrder > KEEP_PURCHASES do
+		data.Purchases[table.remove(data.PurchaseOrder, 1)] = nil
+	end
+end
+
+-- Saves and waits until the save that reached the DataStore includes this
+-- purchase. Returns false if the player left first (Roblox retries later).
+function DataService.WaitForPurchaseSaved(player: Player, purchaseId: string): boolean
+	local entry = profiles[player]
+	if not entry then
+		return false
+	end
+	local profile = entry.Profile
+	profile:Save()
+	while true do
+		if not profile:IsActive() then
+			return false
+		end
+		local saved = profile.LastSavedData
+		if saved and saved.Purchases and saved.Purchases[purchaseId] then
+			return true
+		end
+		profile.OnAfterSave:Wait()
+	end
 end
 
 function DataService.NewId(): string
@@ -297,46 +353,16 @@ function DataService.NewId(): string
 end
 
 function DataService.Start()
-	local ok, result = pcall(function()
-		return DataStoreService:GetDataStore(Balance.DataStoreName)
-	end)
-	if ok then
-		store = result
-	else
-		warn("[DataService] DataStores unavailable: " .. tostring(result))
-	end
+	ProfileStore.SetConstant("AUTO_SAVE_PERIOD", Balance.AutosaveSeconds)
+	store = ProfileStore.New(Balance.DataStoreName, defaultData())
 
 	Players.PlayerAdded:Connect(loadPlayer)
 	Players.PlayerRemoving:Connect(removePlayer)
 	for _, player in Players:GetPlayers() do
 		task.spawn(loadPlayer, player)
 	end
-
-	-- Autosave
-	task.spawn(function()
-		while true do
-			task.wait(Balance.AutosaveSeconds)
-			for player in profiles do
-				task.spawn(savePlayer, player)
-			end
-		end
-	end)
-
-	-- Save everyone when the server shuts down.
-	game:BindToClose(function()
-		local remaining = 0
-		for player in profiles do
-			remaining += 1
-			task.spawn(function()
-				removePlayer(player)
-				remaining -= 1
-			end)
-		end
-		local started = os.clock()
-		while remaining > 0 and os.clock() - started < 25 do
-			task.wait(0.1)
-		end
-	end)
+	-- Shutdown saving is handled by ProfileStore (OnLastSave runs the OnRemoving
+	-- callbacks first).
 end
 
 return DataService

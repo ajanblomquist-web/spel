@@ -1,11 +1,12 @@
 -- Visuals.luau
--- Builds the greybox look of eggs, dinos and labels. When you get real models,
+-- Builds eggs, dinos and labels. Dinos are drawn in code by Shared/DinoArt. If you have real models,
 -- drop them into ReplicatedStorage > DinoModels (named by dino Id, e.g. "TRex")
 -- or ReplicatedStorage > EggModel and they're used automatically.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Dinos = require(ReplicatedStorage.Shared.Config.Dinos)
+local DinoArt = require(ReplicatedStorage.Shared.DinoArt)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Index = require(ReplicatedStorage.Shared.Config.Index)
@@ -69,6 +70,49 @@ function Visuals.Billboard(
 	return gui
 end
 
+local EGG_MATERIALS: { [string]: Enum.Material } = {
+	Common = Enum.Material.SmoothPlastic,
+	Uncommon = Enum.Material.SmoothPlastic,
+	Rare = Enum.Material.Marble,
+	Epic = Enum.Material.Foil,
+	Legendary = Enum.Material.Foil,
+	Mythic = Enum.Material.Foil,
+	Secret = Enum.Material.Neon,
+}
+
+-- Epic and up sparkle softly, Legendary and up also glow.
+local function addEggEffects(part: BasePart, rarity)
+	if rarity.Order < 4 then
+		return
+	end
+	local sparkles = Instance.new("ParticleEmitter")
+	sparkles.Name = "Sparkles"
+	sparkles.Color = ColorSequence.new(rarity.Color:Lerp(Color3.new(1, 1, 1), 0.4))
+	sparkles.LightEmission = 1
+	sparkles.Lifetime = NumberRange.new(1, 2)
+	sparkles.Rate = if rarity.Order >= 5 then 8 else 4
+	sparkles.Speed = NumberRange.new(0.3, 1)
+	sparkles.SpreadAngle = Vector2.new(180, 180)
+	sparkles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.3, 0.4),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	sparkles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.2, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	sparkles.Parent = part
+	if rarity.Order >= 5 then
+		local light = Instance.new("PointLight")
+		light.Color = rarity.Color
+		light.Range = 8
+		light.Brightness = 1
+		light.Parent = part
+	end
+end
+
 -- An egg. Shows its rarity colour; size and mutation stay a surprise until it hatches.
 function Visuals.Egg(egg): BasePart
 	local rarity = Eggs.RarityById[egg.Rarity]
@@ -78,11 +122,12 @@ function Visuals.Egg(egg): BasePart
 		part = template:Clone()
 		part.Color = rarity.Color
 	else
+		-- A block with a sphere mesh and a taller Y: an egg shape that stays one part.
 		part = Visuals.Part({
 			Name = "Egg",
 			Size = Vector3.new(2.4, 3, 2.4),
 			Color = rarity.Color,
-			Material = if egg.Rarity == "Secret" then Enum.Material.Neon else Enum.Material.SmoothPlastic,
+			Material = EGG_MATERIALS[egg.Rarity] or Enum.Material.SmoothPlastic,
 		})
 		local mesh = Instance.new("SpecialMesh")
 		mesh.MeshType = Enum.MeshType.Sphere
@@ -93,7 +138,9 @@ function Visuals.Egg(egg): BasePart
 	part.CanQuery = false
 	part.CanTouch = false
 	part.Massless = true
+	part.CastShadow = false
 	part:SetAttribute("Rarity", egg.Rarity)
+	addEggEffects(part, rarity)
 	return part
 end
 
@@ -112,73 +159,23 @@ local function dinoDisplayName(record): string
 end
 Visuals.DinoDisplayName = dinoDisplayName
 
--- A greybox dinosaur (or the real model if one exists), already scaled for its size.
+-- A code-built dinosaur (or the real model if one exists), already scaled for its size.
 function Visuals.Dino(record, incomePerSecond: number): Model
-	local dino = Dinos.ById[record.DinoId]
 	local size = Eggs.SizeById[record.Size]
-	local mutation = Eggs.MutationById[record.Mutation]
 	local rarity = Eggs.RarityById[record.Rarity]
 
-	local modelsFolder = ReplicatedStorage:FindFirstChild("DinoModels")
-	local template = modelsFolder and modelsFolder:FindFirstChild(record.DinoId)
-
-	local model: Model
-	if template and template:IsA("Model") and template.PrimaryPart then
-		model = template:Clone()
-		for _, d in model:GetDescendants() do
-			if d:IsA("BasePart") then
-				d.Anchored = true
-			end
-		end
-	else
-		model = Instance.new("Model")
-		local color = dino and dino.Color or Color3.new(0.5, 0.5, 0.5)
-		local body = Visuals.Part({ Name = "Body", Size = Vector3.new(3, 2.6, 5), Color = color })
-		body.Parent = model
-		model.PrimaryPart = body
-		local function add(name, size3, offset)
-			local p = Visuals.Part({ Name = name, Size = size3, Color = color })
-			p.CFrame = body.CFrame * CFrame.new(offset)
-			p.Parent = model
-		end
-		add("Head", Vector3.new(2, 2, 2.6), Vector3.new(0, 1.8, -3.2))
-		add("Tail", Vector3.new(1.2, 1.2, 4), Vector3.new(0, 0.4, 4.2))
-		add("LegFL", Vector3.new(0.8, 2, 0.8), Vector3.new(-1, -2.2, -1.5))
-		add("LegFR", Vector3.new(0.8, 2, 0.8), Vector3.new(1, -2.2, -1.5))
-		add("LegBL", Vector3.new(0.8, 2, 0.8), Vector3.new(-1, -2.2, 1.5))
-		add("LegBR", Vector3.new(0.8, 2, 0.8), Vector3.new(1, -2.2, 1.5))
-		add("EyeL", Vector3.new(0.3, 0.4, 0.3), Vector3.new(-0.9, 2.3, -4.2))
-		add("EyeR", Vector3.new(0.3, 0.4, 0.3), Vector3.new(0.9, 2.3, -4.2))
-		for _, name in { "EyeL", "EyeR" } do
-			(model:FindFirstChild(name) :: BasePart).Color = Color3.new(0, 0, 0)
+	local model = DinoArt.Get(record.DinoId)
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
 		end
 	end
 
-	if mutation and mutation.Id ~= "None" then
-		for _, d in model:GetDescendants() do
-			if d:IsA("BasePart") and not string.find(d.Name, "Eye") then
-				d.Color = mutation.Color
-				d.Material = mutation.Material
-			end
-		end
-	end
+	DinoArt.ApplyMutation(model, record.Mutation)
 
-	-- Babies: small body, big head, pink glow.
+	-- Babies: big head and eyes, pink glow.
 	if record.Baby then
-		local head = model:FindFirstChild("Head")
-		if head and head:IsA("BasePart") then
-			local body = model.PrimaryPart :: BasePart
-			local offset = body.CFrame:ToObjectSpace(head.CFrame)
-			head.Size *= 1.6
-			head.CFrame = body.CFrame * (offset + Vector3.new(0, 0.6, 0.4))
-		end
-		for _, name in { "EyeL", "EyeR" } do
-			local eye = model:FindFirstChild(name)
-			if eye and eye:IsA("BasePart") then
-				eye.Size *= 2
-				eye.CFrame += Vector3.new(0, 0.6, -0.6)
-			end
-		end
+		DinoArt.ApplyBaby(model)
 		local glow = Instance.new("Highlight")
 		glow.FillTransparency = 1
 		glow.OutlineColor = Index.BabyColor

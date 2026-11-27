@@ -11,6 +11,9 @@
 --   ROCK   SPAWN
 --   [P1][P2]...[P8]      player plots, z = -100
 --
+-- After the gameplay parts are built, WorldDecor dresses the world (props, camp,
+-- landscape, plot fences) without touching any gameplay part.
+--
 -- To swap in real art later, you can delete the greybox parts this builds and
 -- place your own models with the same names (TrainingRock, LaunchPad), or just
 -- decorate around them.
@@ -21,6 +24,7 @@ local Workspace = game:GetService("Workspace")
 
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local Visuals = require(script.Parent.Parent.Visuals)
+local WorldDecor = require(script.Parent.Parent.WorldDecor)
 
 local MapService = {}
 
@@ -208,8 +212,8 @@ local function buildCanyon()
 			})
 			post.Parent = canyon
 			Visuals.Billboard(post, {
-				{ Text = zone.Name },
-				{ Text = "x" .. zone.Luck .. " luck", Color = Color3.fromRGB(120, 255, 140) },
+				{ Text = if zone.Secret then "???" else zone.Name },
+				{ Text = Zones.LuckText(zone), Color = Color3.fromRGB(120, 255, 140) },
 			}, Vector2.new(16, 5), 9, 600)
 		end
 	end
@@ -289,6 +293,7 @@ local function buildPlot(index: number): Plot
 		incubators[i] = nest
 	end
 
+	WorldDecor.Plot(model, center, PLOT_SIZE, INCUBATOR_OFFSETS)
 	model.Parent = Workspace:WaitForChild("Plots")
 
 	return {
@@ -305,6 +310,19 @@ local function buildPlot(index: number): Plot
 		),
 		Owner = nil,
 	}
+end
+
+-- Colours the plot's border strips and corner lanterns (the parts named "Border").
+local function setPlotAccent(plot: Plot, color: Color3)
+	local decor = plot.Model:FindFirstChild("Decor")
+	if not decor then
+		return
+	end
+	for _, child in decor:GetChildren() do
+		if child.Name == "Border" and child:IsA("BasePart") then
+			child.Color = color
+		end
+	end
 end
 
 local function setSign(plot: Plot, text: string)
@@ -370,12 +388,37 @@ function MapService.Init(Services)
 		plots[i] = buildPlot(i)
 	end
 
+	local decorConfig: WorldDecor.Config = {
+		Origin = MapService.LaunchOrigin,
+		CanyonWidth = CANYON_WIDTH,
+		PadPosition = MapService.PadPosition,
+		RockPosition = MapService.TrainingRockPosition,
+		HubHalfWidth = HUB_HALF_WIDTH,
+		HubBackZ = HUB_BACK_Z,
+		PlotZ = PLOT_Z,
+		PlotCount = PLOT_COUNT,
+		PlotSpacing = PLOT_SPACING,
+		PlotSize = PLOT_SIZE,
+	}
+	local dressing = Instance.new("Folder")
+	dressing.Name = "Dressing"
+	dressing.Parent = mapFolder
+	WorldDecor.Hub(dressing, decorConfig)
+	WorldDecor.Zones(dressing, decorConfig)
+	WorldDecor.Landscape(dressing, decorConfig)
+	local count = #dressing:GetDescendants()
+	for _, plot in plots do
+		count += #plot.Model:GetDescendants()
+	end
+	print("[MapService] world dressing instances: " .. count)
+
 	Services.DataService.OnLoaded(function(player)
 		for i, plot in plots do
 			if plot.Owner == nil then
 				plot.Owner = player
 				plotByPlayer[player] = plot
 				plot.Floor.Color = PLOT_COLORS[i]
+				setPlotAccent(plot, PLOT_COLORS[i])
 				plot.Model:SetAttribute("OwnerUserId", player.UserId)
 				setSign(plot, player.DisplayName .. "'s Nest")
 				player:SetAttribute("PlotIndex", i)
@@ -396,6 +439,7 @@ function MapService.Init(Services)
 		if plot then
 			plot.Owner = nil
 			plot.Floor.Color = Color3.fromRGB(170, 170, 170)
+			setPlotAccent(plot, Color3.fromRGB(200, 196, 188))
 			plot.Model:SetAttribute("OwnerUserId", nil)
 			setSign(plot, "Free plot")
 			plotByPlayer[player] = nil
