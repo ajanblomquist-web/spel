@@ -17,6 +17,7 @@ local Balance = require(ReplicatedStorage.Shared.Config.Balance)
 local Weapons = require(ReplicatedStorage.Shared.Config.Weapons)
 local Eggs = require(ReplicatedStorage.Shared.Config.Eggs)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local EggRoll = require(script.Parent.Parent.EggRoll)
 local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
@@ -276,6 +277,7 @@ local function dig(player: Player)
 	end
 	local egg = CarryService.RollEgg(player, spot.Luck, spot.ZoneId)
 	local data = DataService.Get(player)
+	Remotes.Get("DigBurst"):FireAllClients(spot.Part.Position, spot.Part.Color)
 	CarryService.ClearDigSpot(player)
 	-- The first egg can't be stolen on the way home: a new player's first loop should feel good.
 	local protect = if egg.Fast then 120 else 0

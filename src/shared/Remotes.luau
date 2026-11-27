@@ -26,6 +26,7 @@
 --   GroupCheck     client -> server   re-check group membership after the join prompt
 --   Rebirth        client -> server   rebirth (pay coins, reset, get permanent bonuses)
 --   ClaimDaily     client -> server   claim today's login streak reward
+--   DigBurst       server -> all      (position, color) dirt burst where an egg was dug up
 --   RedeemCode     client -> server   redeem a code from the Shop's Codes box
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -54,6 +55,7 @@ local NAMES = {
 	"GroupCheck",
 	"Rebirth",
 	"ClaimDaily",
+	"DigBurst",
 	"RedeemCode",
 }
 

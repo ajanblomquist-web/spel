@@ -209,7 +209,8 @@ src/
     Services/
       DataService         load / save (ProfileStore, session-locked) / leaderboard
       MonetizationService game pass ownership
-      MapService          builds the greybox world and the 8 plots
+      MapService          builds the gameplay world (hub, canyon, 8 plots) and calls WorldDecor
+      AtmosphereService   lighting mood: warm afternoon sun, haze, colour grade, bloom, sun rays
       MovementService     walk speed (carrying, Speedy Boots, field speed)
       NestService         incubators, hatching, pedestals, selling, nest stealing, nest lock
       IncomeService       coins per second and offline income
@@ -234,6 +235,7 @@ src/
     Events.luau           tiny event bus (Fling, Dig, Hatch...) that quests listen to
     EggRoll.luau          the egg and dino rolls
     Visuals.luau          eggs (rarity look + sparkles), dinos (via DinoArt) and labels
+    WorldDecor.luau       code-built scenery: per-zone themes (THEMES, keyed by zone Id), zone gates, hub camp, plot fences, cliffs, mountains, volcano, lakes, clouds
   client/                 StarterPlayerScripts.Client
     Controllers/
       UIController        all screen UI
@@ -249,6 +251,7 @@ src/
       DailyController     daily streak popup
       EventController     event timer pill
       ProductController   Codes box, Robux deals and coin packs in the Shop
+      EffectsController   dig dirt burst, drifting clouds, circling pterosaurs
 tools/
   curve_sim.py            rough progression simulator (python3 tools/curve_sim.py)
 ```
@@ -259,7 +262,8 @@ tools/
 
 - **Dinos:** put a Model named after the dino's Id (for example `TRex`, `Velociraptor`, see `Dinos.luau`) with a PrimaryPart in **ReplicatedStorage > DinoModels**. It's used instead of the code-built dino (`DinoArt.luau`, picked by `Shape` in `Dinos.luau`) automatically, on pedestals and in the hatch reveal. Give parts the attribute `KeepColor = true` if a Gold/Rainbow mutation should not recolour them.
 - **Eggs:** put a part named `EggModel` in ReplicatedStorage.
-- **World:** the map is built in `MapService.luau`. Keep the `TrainingRock` and `LaunchPad` parts (the code looks for them) and decorate around them.
+- **World:** the gameplay parts are built in `MapService.luau` and the scenery in `WorldDecor.luau` (no uploaded assets). Keep the `TrainingRock` and `LaunchPad` parts (the code looks for them) and decorate around them. A new zone in `Zones.luau` is dressed automatically; give it its own look by adding an entry (keyed by its Id) to `THEMES` in `WorldDecor.luau`.
+- **Lighting:** `AtmosphereService.luau`. `Lighting.Technology` can't be set from a script, so set it to **Future** (or ShadowMap) once in Studio's Lighting properties.
 
 ## Before a public launch
 

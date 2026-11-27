@@ -722,19 +722,12 @@ local function decorate(ctx: Ctx)
 				{ Color = Color3.fromRGB(255, 120, 30), Material = Enum.Material.Neon, Keep = true }
 			)
 		elseif ctx.Theme == "Amber" then
-			add(
-				ctx,
-				"AmberGem" .. i,
-				Vector3.new(0.7, 0.7, 0.7),
-				spot + Vector3.new(0, 0.15, 0),
-				nil,
-				{
-					Color = Color3.fromRGB(255, 185, 50),
-					Material = Enum.Material.Glass,
-					Transparency = 0.2,
-					Keep = true,
-				}
-			)
+			add(ctx, "AmberGem" .. i, Vector3.new(0.7, 0.7, 0.7), spot + Vector3.new(0, 0.15, 0), nil, {
+				Color = Color3.fromRGB(255, 185, 50),
+				Material = Enum.Material.Glass,
+				Transparency = 0.2,
+				Keep = true,
+			})
 		end
 	end
 end

@@ -1,5 +1,6 @@
 -- FlingController.luau
--- FLING button at the launch pad, the timing meter, and the flying shovel.
+-- FLING button at the launch pad, the timing meter, and the flying shovel
+-- (with a light trail, a dust burst where it lands and a camera shake on Perfect).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -76,6 +77,24 @@ local function makeShovel(tier: number): Model
 		part.CanTouch = false
 	end
 	model.PrimaryPart = handle
+
+	-- Swoosh trail between the two ends of the handle.
+	local top = Instance.new("Attachment")
+	top.Position = Vector3.new(0, 2.5, 0)
+	top.Parent = handle
+	local bottom = Instance.new("Attachment")
+	bottom.Position = Vector3.new(0, -2.5, 0)
+	bottom.Parent = handle
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = top
+	trail.Attachment1 = bottom
+	trail.Lifetime = 0.5
+	trail.FaceCamera = true
+	trail.LightEmission = 0.4
+	trail.Color = ColorSequence.new(shovel.Color:Lerp(Color3.new(1, 1, 1), 0.5), shovel.Color)
+	trail.Transparency = NumberSequence.new(0.2, 1)
+	trail.Parent = handle
+
 	model.Parent = Workspace
 	return model
 end
@@ -94,6 +113,60 @@ local function dustPuff(position: Vector3)
 	TweenService:Create(puff, TweenInfo.new(0.6), { Size = Vector3.new(14, 14, 14), Transparency = 1 }):Play()
 	task.delay(0.7, function()
 		puff:Destroy()
+	end)
+end
+
+-- A burst of dust particles (default texture) at the landing spot.
+local function dustBurst(position: Vector3)
+	local anchor = Instance.new("Part")
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
+	anchor.CastShadow = false
+	anchor.Transparency = 1
+	anchor.Size = Vector3.one
+	anchor.Position = position + Vector3.new(0, 1, 0)
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Enabled = false
+	emitter.Rate = 0
+	emitter.Color = ColorSequence.new(Color3.fromRGB(214, 192, 150))
+	emitter.Lifetime = NumberRange.new(0.6, 1.1)
+	emitter.Speed = NumberRange.new(14, 26)
+	emitter.SpreadAngle = Vector2.new(70, 70)
+	emitter.Acceleration = Vector3.new(0, -10, 0)
+	emitter.Drag = 3
+	emitter.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 6) })
+	emitter.Transparency =
+		NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
+	emitter.Parent = anchor
+	anchor.Parent = Workspace
+	emitter:Emit(18)
+	task.delay(2, function()
+		anchor:Destroy()
+	end)
+end
+
+-- A short camera shake (used on Perfect flings). Layered on top of the camera
+-- script each frame, so it never drifts.
+local shaking = false
+local function shakeCamera(duration: number, strength: number)
+	if shaking then
+		return
+	end
+	shaking = true
+	local started = os.clock()
+	RunService:BindToRenderStep("FlingShake", Enum.RenderPriority.Camera.Value + 1, function()
+		local camera = Workspace.CurrentCamera
+		local t = (os.clock() - started) / duration
+		if t >= 1 or not camera then
+			RunService:UnbindFromRenderStep("FlingShake")
+			shaking = false
+			return
+		end
+		local amount = strength * (1 - t)
+		camera.CFrame = camera.CFrame
+			* CFrame.new(math.random() * 2 * amount - amount, math.random() * 2 * amount - amount, 0)
 	end)
 end
 
@@ -169,6 +242,10 @@ local function onFlingResult(result)
 			connection:Disconnect()
 			model:PivotTo(CFrame.new(to + Vector3.new(0, 2.5, 0)) * CFrame.Angles(math.rad(20), 0, 0))
 			dustPuff(to)
+			dustBurst(to)
+			if isMine and result.Perfect then
+				shakeCamera(0.4, 0.6)
+			end
 			task.delay(1.2, function()
 				if isMine and camera then
 					local character = player.Character
