@@ -132,7 +132,7 @@ Now press **Play**.
   - **Volcano Rim** (1150-1450m, x9 luck, Toughness 40): Ember Raptor, Magma Stego, Inferno Spino, Volcano Titan (Mythic). Reached after about 2 rebirths (~4 h).
   - **Crystal Caves** (1450-1750m, x13 luck, Toughness 60): Crystal Raptor, Geode Ankylo, Prism Trike, Amethyst Brachio (Mythic). Reached after 3-4 rebirths (~8-9 h).
   - **Meteor Crater** (1750-2050m, x19 luck, Toughness 100): Star Raptor, Comet Stego, Orbit Ptero, Comet Spino (Mythic). Reached after about 6 rebirths (~24 h).
-  - **Sky Island** (2050-2350m, x28 luck, Toughness 130), the secret last zone: its signs say "???" until you land there. Cloud Compy, Sky Ptero, Aurora Parasaur (Mythic) and Celestial Rex (Secret). The long-term goal (~40 h, about 7 rebirths).
+  - **Sky Island** (2050-2350m, x28 luck, Toughness 130), the secret last zone: its signs say "???" until you land there. Cloud Compy, Sky Ptero, Aurora Parasaur (Mythic) and Celestial Rex (Secret). The long-term goal (~50 h, about 7 rebirths).
   - Field speed: you run 3.5x speed from 150m out, so fetching eggs is quick and the hub (where thieves and bonkers wait) is the slow, risky part.
 - **Shop sections**: Codes, Rebirth, Training Rocks, Shovels, Weapons, Weapon Skins, Robux Deals (Starter Pack, Rare Egg) and Coin Packs.
 - **Codes**: type a code in the box at the top of the Shop. Each works once per player. Starting codes: `FOSSIL` (2x Luck 15 min), `RELEASE` (10 min of income, at least 1,000 coins), `DINOPOWER` (2x Strength 15 min). Add codes in `Config/Codes.luau` (rewards use the gift format; optional expiry date).
