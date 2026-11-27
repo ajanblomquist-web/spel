@@ -97,6 +97,7 @@ local function resolve(player: Player, meterValue: number, auto: boolean?)
 		luck *= Passes.Effects.LuckMultiplier
 	end
 	luck *= BoostService.Multiplier(player, "Luck")
+	luck *= BoostService.ServerMultiplier("Luck")
 	luck *= RebirthService.Multiplier(player, "Luck")
 	luck *= EventService.Multiplier("Luck")
 

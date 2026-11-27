@@ -7,10 +7,13 @@
 --
 -- Developer products (Config/Products) go through ProcessReceipt. Each purchase
 -- ID is remembered in the player's data so a product is never granted twice.
--- Nothing here sells a random roll.
+-- The only paid random item is the Rare Egg (odds shown); players where
+-- PolicyService restricts paid random items get a PaidRandomBlocked attribute
+-- and the Shop hides it from them.
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
+local PolicyService = game:GetService("PolicyService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -102,6 +105,15 @@ function MonetizationService.Init(Services)
 	-- Check passes before the other services set up the player, so things like
 	-- extra pedestals and offline income already know what the player owns.
 	Services.DataService.OnLoaded(function(player)
+		-- Hide paid random items where they're restricted. If the check fails,
+		-- assume restricted (safe default).
+		task.spawn(function()
+			local ok, policy = pcall(function()
+				return PolicyService:GetPolicyInfoForPlayerAsync(player)
+			end)
+			local blocked = not ok or policy.ArePaidRandomItemsRestricted == true
+			player:SetAttribute("PaidRandomBlocked", blocked and not RunService:IsStudio())
+		end)
 		owned[player] = {}
 		for key, pass in Passes.ByKey do
 			local has = false

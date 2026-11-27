@@ -5,7 +5,14 @@
 -- the "Test buy" button grants it without Robux.
 --
 -- Nothing here is a hidden roll: every product says exactly what it gives. The
--- Rare Egg lists the dinos it can hatch and their odds.
+-- Rare Egg is the only paid random item: it lists the dinos it can hatch and
+-- their odds, and it is hidden for players where PolicyService restricts paid
+-- random items. The Starter Pack's egg is always the same dino.
+--
+-- Boost potions add 15 minutes to your own 2x boost. Server Luck gives 2x luck
+-- to everyone in the server (on top of their own boosts). Instant Hatch comes in
+-- three sizes: the Shop offers the smallest one that covers your longest egg;
+-- each one takes up to MaxSeconds off every egg in your incubators.
 --
 -- Coin packs give a number of hours of your current income (what your dinos
 -- earn per second right now), with a minimum so new players still get a lot.
@@ -35,11 +42,15 @@ local function rareEggText(): string
 	return list .. ", " .. odds .. "% each"
 end
 
+-- The dino in the Starter Pack's egg (always the same one, so it isn't a roll).
+Products.StarterPackDinoId = Dinos.Pool("Rare", nil)[1].Id
+local starterDinoName = Dinos.Pool("Rare", nil)[1].Name
+
 Products.List = {
 	{
 		Key = "StarterPack",
 		Name = "Starter Pack",
-		Description = "2x Coins for 30 min, a Rare egg and 1,000 coins.",
+		Description = "2x Coins for 30 min, a Rare " .. starterDinoName .. " egg and 1,000 coins.",
 		ProductId = 0,
 		Price = 99,
 		OneTime = true,
@@ -50,6 +61,63 @@ Products.List = {
 		Description = rareEggText(),
 		ProductId = 0,
 		Price = 49,
+	},
+	{
+		Key = "LuckPotion",
+		Name = "2x Luck potion",
+		Description = "2x luck on every dig for 15 min. Adds to time you already have.",
+		Boost = "Luck",
+		Seconds = 15 * 60,
+		ProductId = 0,
+		Price = 79,
+	},
+	{
+		Key = "CoinsPotion",
+		Name = "2x Coins potion",
+		Description = "2x dino income for 15 min. Adds to time you already have.",
+		Boost = "Coins",
+		Seconds = 15 * 60,
+		ProductId = 0,
+		Price = 79,
+	},
+	{
+		Key = "StrengthPotion",
+		Name = "2x Strength potion",
+		Description = "2x Strength per rep for 15 min. Adds to time you already have.",
+		Boost = "Strength",
+		Seconds = 15 * 60,
+		ProductId = 0,
+		Price = 49,
+	},
+	{
+		Key = "ServerLuck",
+		Name = "Server Luck",
+		Description = "2x luck for EVERYONE in this server for 10 min. Everyone sees who bought it!",
+		ServerBoost = "Luck",
+		Seconds = 10 * 60,
+		ProductId = 0,
+		Price = 199,
+	},
+	{
+		Key = "InstantHatch5",
+		Name = "Instant Hatch",
+		MaxSeconds = 5 * 60,
+		ProductId = 0,
+		Price = 19,
+	},
+	{
+		Key = "InstantHatch30",
+		Name = "Instant Hatch",
+		MaxSeconds = 30 * 60,
+		ProductId = 0,
+		Price = 49,
+	},
+	{
+		Key = "InstantHatchAll",
+		Name = "Instant Hatch",
+		MaxSeconds = math.huge,
+		ProductId = 0,
+		Price = 99,
 	},
 	{
 		Key = "Coins5h",
@@ -76,6 +144,16 @@ Products.List = {
 
 for _, product in Products.List do
 	Products[product.Key] = product
+end
+
+-- The smallest Instant Hatch that finishes an egg with this many seconds left.
+function Products.InstantHatchFor(secondsLeft: number)
+	for _, key in { "InstantHatch5", "InstantHatch30", "InstantHatchAll" } do
+		if secondsLeft <= Products[key].MaxSeconds then
+			return Products[key]
+		end
+	end
+	return Products.InstantHatchAll
 end
 
 return Products

@@ -5,6 +5,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Products = require(ReplicatedStorage.Shared.Config.Products)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Events = require(script.Parent.Parent.Events)
 local Notify = require(script.Parent.Parent.Notify)
@@ -35,7 +36,13 @@ function StarterPackService.Init(Services)
 		player:SetAttribute("StarterPackBought", true)
 		BoostService.Add(player, "Coins", 30 * 60)
 		DataService.AddCoins(player, 1000)
-		local egg = { Id = DataService.NewId(), Rarity = "Rare", Size = "Normal", Mutation = "None" }
+		local egg = {
+			Id = DataService.NewId(),
+			Rarity = "Rare",
+			Size = "Normal",
+			Mutation = "None",
+			DinoId = Products.StarterPackDinoId, -- always the same dino: not a paid roll
+		}
 		NestService.GiveEgg(player, egg)
 		Notify.Player(player, "Starter Pack unlocked! Enjoy 2x Coins!", "epic")
 	end)

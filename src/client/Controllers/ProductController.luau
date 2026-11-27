@@ -1,12 +1,18 @@
 -- ProductController.luau
 -- The Robux sections at the bottom of the Shop: ROBUX DEALS (Starter Pack,
--- built by UIController, and the Rare Egg) and COIN PACKS (5, 10 and 24 hours
--- of your current income; the row shows how many coins that is right now),
--- plus the Codes box at the very top of the Shop.
+-- built by UIController, the Rare Egg, Instant Hatch and Server Luck), BOOSTS
+-- (15 min potions) and COIN PACKS (5, 10 and 24 hours of your current income;
+-- the row shows how many coins that is right now), plus the Codes box at the
+-- very top of the Shop.
+--
+-- The Rare Egg row is hidden where paid random items are restricted
+-- (PaidRandomBlocked). The Instant Hatch row only shows while you have an egg
+-- incubating, and offers the smallest size that covers your longest egg.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local FormatNumber = require(ReplicatedStorage.Shared.Util.FormatNumber)
 local Products = require(ReplicatedStorage.Shared.Config.Products)
@@ -80,12 +86,66 @@ function ProductController.Start(Controllers)
 
 	UI.SectionHeader(list, 900, "ROBUX DEALS", Color3.fromRGB(40, 150, 70))
 	local rare = Products.RareEgg
-	local _, rareButton = UI.Row(list, 902, rare.Name, rare.Description)
+	local rareRow, rareButton = UI.Row(list, 902, rare.Name, rare.Description)
 	rareButton.Text = priceText(rare)
 	rareButton.BackgroundColor3 = UI.Colors.Green
 	rareButton.Activated:Connect(function()
 		UI.PromptProduct(rare.Key)
 	end)
+	local function refreshRare()
+		rareRow.Visible = player:GetAttribute("PaidRandomBlocked") ~= true
+	end
+	refreshRare()
+	player:GetAttributeChangedSignal("PaidRandomBlocked"):Connect(refreshRare)
+
+	-- Instant Hatch: one row, priced by your longest egg.
+	local hatchRow, hatchButton = UI.Row(list, 903, "Instant Hatch", "")
+	hatchButton.BackgroundColor3 = UI.Colors.Green
+	local hatchSubtitle = hatchRow:FindFirstChild("Subtitle") :: TextLabel
+	local hatchProduct = Products.InstantHatch5
+	hatchButton.Activated:Connect(function()
+		UI.PromptProduct(hatchProduct.Key)
+	end)
+	task.spawn(function()
+		while true do
+			local readyAt = player:GetAttribute("LongestHatchAt")
+			local left = if readyAt then readyAt - Workspace:GetServerTimeNow() else 0
+			hatchRow.Visible = left > 1
+			if left > 1 then
+				hatchProduct = Products.InstantHatchFor(left)
+				hatchButton.Text = priceText(hatchProduct)
+				local minutes = math.ceil(left / 60)
+				hatchSubtitle.Text = if hatchProduct.MaxSeconds == math.huge
+					then "Hatch every egg in your incubators now (" .. minutes .. " min left)"
+					else "Hatch your eggs now (up to "
+						.. math.floor(hatchProduct.MaxSeconds / 60)
+						.. " min off each)"
+			end
+			task.wait(1)
+		end
+	end)
+
+	local server = Products.ServerLuck
+	local _, serverButton = UI.Row(list, 904, server.Name, server.Description)
+	serverButton.Text = priceText(server)
+	serverButton.BackgroundColor3 = UI.Colors.Green
+	serverButton.Activated:Connect(function()
+		UI.PromptProduct(server.Key)
+	end)
+
+	UI.SectionHeader(list, 905, "BOOSTS", Color3.fromRGB(90, 120, 220))
+	local boostOrder = 905
+	for _, product in Products.List do
+		if product.Boost then
+			boostOrder += 1
+			local _, button = UI.Row(list, boostOrder, product.Name, product.Description)
+			button.Text = priceText(product)
+			button.BackgroundColor3 = UI.Colors.Green
+			button.Activated:Connect(function()
+				UI.PromptProduct(product.Key)
+			end)
+		end
+	end
 
 	UI.SectionHeader(list, 910, "COIN PACKS", Color3.fromRGB(190, 150, 30))
 	local subtitles = {}

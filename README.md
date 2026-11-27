@@ -165,9 +165,14 @@ Create these in **Creator Hub > Monetization > Developer Products** and paste th
 
 | Product | What you get | Suggested R$ |
 |---|---|---|
-| Starter Pack (one time) | 2x Coins for 30 min, a Rare egg, 1,000 coins | 99 |
-| Rare Egg (Shop) | One Rare egg (dinos and odds shown on the row). Waits for a free incubator if yours are full | 49 |
+| Starter Pack (one time) | 2x Coins for 30 min, a Rare egg that always hatches the same dino (not a roll), 1,000 coins | 99 |
+| Rare Egg (Shop) | One Rare egg (dinos and odds shown on the row). Waits for a free incubator if yours are full. The only paid random item: hidden for players where Roblox restricts those (PolicyService) | 49 |
+| Instant Hatch (Shop, 3 products) | Takes up to 5 min / 30 min / all the time off every egg in your incubators. The Shop offers the smallest one that covers your longest egg, and only while an egg is incubating | 19 / 49 / 99 |
+| Server Luck (Shop) | 2x luck for everyone in the server for 10 min, on top of their own boosts; announced with the buyer's name | 199 |
+| 2x Luck / 2x Coins / 2x Strength potion (Shop) | 15 min of that boost, added to time you already have | 79 / 79 / 49 |
 | 5 / 10 / 24 hours of coins (Shop) | That many hours of your current income (at least 2,500 per hour) | 99 / 179 / 349 |
+
+Paid purchases are only confirmed to Roblox after the save that records them has reached the DataStore.
 
 
 ---

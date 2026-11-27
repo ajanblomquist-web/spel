@@ -77,6 +77,13 @@ function NestService.RenderIncubators(player: Player)
 	local list = visualsFor(player).Eggs
 	clearList(list)
 
+	-- The Shop's Instant Hatch row reads this to pick its size and price.
+	local longest = 0
+	for _, entry in data.Incubating do
+		longest = math.max(longest, entry.ReadyAt - os.time())
+	end
+	player:SetAttribute("LongestHatchAt", if longest > 0 then Workspace:GetServerTimeNow() + longest else nil)
+
 	for i, entry in data.Incubating do
 		local nest = plot.Incubators[i]
 		if not nest then
@@ -309,6 +316,27 @@ end
 
 -- For eggs the player bought: into an incubator now, or queued until one is
 -- free (a bought egg is never lost or swapped for coins).
+-- Instant Hatch: takes up to maxSeconds off every incubating egg. Returns how
+-- many eggs it sped up. Hatching itself happens on the next hatch check.
+function NestService.SkipTime(player: Player, maxSeconds: number): number
+	local data = DataService.Get(player)
+	if not data then
+		return 0
+	end
+	local now = os.time()
+	local count = 0
+	for _, entry in data.Incubating do
+		if entry.ReadyAt > now then
+			entry.ReadyAt = math.max(now, entry.ReadyAt - maxSeconds)
+			count += 1
+		end
+	end
+	if count > 0 then
+		NestService.RenderIncubators(player)
+	end
+	return count
+end
+
 function NestService.GiveEgg(player: Player, egg)
 	if NestService.TryAddEgg(player, egg) then
 		return
@@ -327,12 +355,12 @@ end
 local function hatch(player: Player, data, egg)
 	local record = {
 		Id = egg.Id,
-		DinoId = EggRoll.PickDino(egg.Rarity, egg.Zone),
+		DinoId = egg.DinoId or EggRoll.PickDino(egg.Rarity, egg.Zone), -- bought eggs may name their dino
 		Rarity = egg.Rarity,
 		Size = egg.Size,
 		Mutation = egg.Mutation,
 		Zone = egg.Zone,
-		Baby = if IndexService.RollBaby(player) then true else nil,
+		Baby = if not egg.DinoId and IndexService.RollBaby(player) then true else nil,
 	}
 	table.insert(data.Dinos, record)
 	data.Stats.DinosHatched += 1

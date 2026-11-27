@@ -8,11 +8,11 @@ Where Fling for Fossils stands against the design doc, and what's left to finish
 
 ## M5: Shop and social (monetization finish)
 - Done: **coin packs** (5 / 10 / 24 hours of income), **Rare Egg**, **Codes** box.
-- To do: boost potions (2x Luck / Coins / Strength, 15 min), **Server Luck** (2x luck for everyone for 10 min, announced with the buyer's name), **Instant Hatch** (price scales with time left).
+- Done: boost potions, **Server Luck**, **Instant Hatch** (3 sizes), PolicyService check for the Rare Egg.
 - To do: **gift a pass** to another player in the server, and a **friend boost** (+10% coins per friend in the server, capped).
-- Nothing random is ever sold for Robux, so no odds disclosure or PolicyService gating is needed. Keep it that way.
+- The Rare Egg is the only paid random item (odds shown, hidden where restricted). Keep every other product fixed.
 
-## M6: Safe saving
+## M6: Safe saving (done)
 - Switch DataService to **ProfileStore** (session locking against item duplication). Keep DataService's public functions the same so no other service changes.
 
 ## M7: Art and feel
